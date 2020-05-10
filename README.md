@@ -48,15 +48,17 @@ This repo contains that prototype.
    *load* method, which can be used to read a complete set of attributes
    (including those of nested *GameObjects*) from a file.
 
-   Most of these classes, if run as a *__main__*, include a unit-test suite
+   Most of these classes, if run as a *main*, include a unit-test suite
    for the basic functionality of that class.
 
    Sample code to instantiate objects, load their parameters, and obtain
    their possible actions, and perform those (interaction, skill, and
-   combat) actions can be found in *test.py*.
+   combat) actions can be found in *test.py*.  The attributes of the
+   actor, target NPC, and local context are *load*ed from three files:
+   *TEST_hero.dat*, *TEST_guard.dat*, and *TEST_context.dat*.
 
 **Makefile targets:**
    - *default*: run the basic *test.py* program
-   _ *all*: run all of the unit-test cases as well as *test.py*
+   - *all*: run all of the unit-test cases as well as *test.py*
    - *doc*: use *epydoc* to generate a class diagram and API documentation.
    - *lint*: use *pylint* and *pep8* to check the code for standards compliance
