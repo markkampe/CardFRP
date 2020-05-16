@@ -4,6 +4,7 @@ of the key classes can be used.
 """
 import argparse
 from random import randint
+from gameobject import GameObject
 from gameactor import GameActor
 from npc_guard import NPC_guard
 from gamecontext import GameContext
@@ -139,6 +140,53 @@ def main():
             print("    {} has {} HP".format(npc.name, npc.get("LIFE")))
         else:
             print("    {} is dead".format(npc.name))
+
+    # test conditions delivered from an artifact
+    scroll = GameObject("Scroll of CLW")
+    scroll.set("ACTIONS", "LIFE")
+    scroll.set("POWER", 100)            # test base attribute
+    scroll.set("STACKS.LIFE", "D6+1")   # test sub-type attribute
+
+    print("\nHero reads " + str(scroll))
+    clw = scroll.possible_actions(actor, local)[0]
+    (_, desc) = clw.act(actor, actor, local)
+    print("    " + desc)
+    print("    {} now has {} HP".format(actor.name, actor.get("LIFE")))
+
+    # test conditions compounded with an attack
+    dagger = GameObject("Poison Dagger")
+    dagger.set("ACTIONS", "ATTACK.STAB")
+    dagger.set("ACCURACY", 10)
+    dagger.set("DAMAGE", "D8")
+
+    stab = dagger.possible_actions(actor, local)[0]
+    stab.set("POWER", "10,25")
+    stab.set("STACKS", "D6,2")
+
+    print("\nHero attacked by " + str(dagger))
+    success = False
+    while not success:
+        stab.verb = "ATTACK.STAB,PHYSICAL.POISON,MENTAL.FEAR"
+        (success, desc) = stab.act(guard, actor, local)
+        lines = desc.split("\n")
+        for line in lines:
+            print("    " + line)
+
+    # now do a negative fear
+    scroll = GameObject("Scroll of Courage")
+    scroll.set("ACTIONS", "MENTAL.FEAR")
+    scroll.set("POWER", 100)            # test base attribute
+    scroll.set("STACKS", -1)
+
+    print("    {} now has FEAR of {}".format(actor.name,
+                                             actor.get("MENTAL.FEAR")))
+    print()
+    print("{} reads {}".format(actor.name, scroll))
+    bold = scroll.possible_actions(actor, local)[0]
+    (_, desc) = bold.act(actor, actor, local)
+    print("    " + desc)
+    print("    {} now has FEAR of {}".format(actor.name,
+                                             actor.get("MENTAL.FEAR")))
 
 
 if __name__ == "__main__":

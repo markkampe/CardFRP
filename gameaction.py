@@ -197,22 +197,11 @@ class GameAction(Base):
         for the verbs in question)
         """
         # pick up the verb(s) and associated attributes
-        if "," in self.verb:
-            verbs = self.verb.split(',')
-            val = self.get("ACCURACY")
-            accuracies = [] if val is None else val.split(',')
-            val = self.get("DAMAGE")
-            damages = [] if val is None else val.split(',')
-            val = self.get("POWER")
-            powers = [] if val is None else val.split(',')
-            val = self.get("STACKS")
-            stacks = [] if val is None else val.split(',')
-        else:
-            verbs = [self.verb]
-            accuracies = [self.get("ACCURACY")]
-            damages = [self.get("DAMAGE")]
-            powers = [self.get("POWER")]
-            stacks = [self.get("STACKS")]
+        verbs = self.verb.split(',') if ',' in self.verb else [self.verb]
+        accuracies = self.get_list("ACCURACY", len(verbs))
+        damages = self.get_list("DAMAGE", len(verbs))
+        powers = self.get_list("POWER", len(verbs))
+        stacks = self.get_list("STACKS", len(verbs))
 
         # carry out each of the verbs
         results = ""
@@ -243,6 +232,22 @@ class GameAction(Base):
                 return (False, results)
 
         return (True, results)
+
+    def get_list(self, name, size):
+        """
+        read specified attribute, parse into a list
+        @param name: name of desired attribute
+        @param size: number of desired list elements
+        @return list of elements
+        """
+        atr = self.get(name)
+        if atr is None:
+            return [None] * size
+        if not isinstance(atr, str):
+            return [atr] * size
+        if ',' not in atr:
+            return [atr] * size
+        return atr.split(',')
 
 
 class TestRecipient(Base):

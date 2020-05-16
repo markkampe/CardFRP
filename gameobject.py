@@ -55,6 +55,7 @@ class GameObject(Base):
         if item not in self.objects:
             self.objects.append(item)
 
+    # pylint: disable=too-many-locals
     def accept_action(self, action, actor, context):
         """
         receive and process the effects of an action
@@ -94,25 +95,28 @@ class GameObject(Base):
                     .format(self.name, action.source.name, action.verb))
 
         # see how many stacks we can resist
+        incoming = abs(int(action.get("TOTAL")))
         received = 0
-        incoming = int(action.get("TOTAL"))
         for _ in range(incoming):
             roll = randint(1, 100)
             if roll <= power:
                 received += 1
 
         # deliver the updated condition
+        sign = 1 if int(action.get("TOTAL")) > 0 else -1
         if received > 0:
             have = self.get(action.verb)
             if have is None:
-                self.set(action.verb, received)
+                self.set(action.verb, sign * received)
             else:
-                self.set(action.verb, received + int(have))
+                self.set(action.verb, int(have) + sign * received)
 
         return (received > 0,
                 "{} resists {}/{} stacks of {} from {} in {}"
                 .format(self.name, incoming - received, incoming,
-                        action.verb, actor, context))
+                        action.verb if sign > 0
+                        else "(negative) " + action.verb,
+                        actor, context))
 
     # pylint: disable=unused-argument; sub-classes are likely to use them
     def possible_actions(self, actor, context):
@@ -133,6 +137,8 @@ class GameObject(Base):
         # get our base accuracy and damage (for ATTACK actions)
         base_damage = self.get("DAMAGE")
         base_accuracy = self.get("ACCURACY")
+        base_power = self.get("POWER")
+        base_stacks = self.get("STACKS")
 
         # get a list of possible actions with this weapon
         actions = []
@@ -145,7 +151,7 @@ class GameObject(Base):
 
             # if is an ATTACK, we need to add ACCURACY and DAMAGE
             if verb.startswith("ATTACK"):
-                # see if we hae sub-type accuracy/damage
+                # see if we have sub-type accuracy/damage
                 sub_accuracy = None
                 sub_damage = None
                 if verb.startswith('ATTACK.'):
@@ -165,6 +171,21 @@ class GameObject(Base):
                     action.set("DAMAGE", base_damage)
                 else:
                     action.set("DAMAGE", "0")
+            else:   # condition, we need POWER and STACKS
+                sub_type = verb.split('.')[1] if '.' in verb else verb
+                sub_power = self.get("POWER." + sub_type)
+                power = 0 if base_power is None else int(base_power)
+                power += 0 if sub_power is None else int(sub_power)
+                action.set("POWER", power)
+
+                # FIX GameAction.STACKS is a formula and cannot be added
+                sub_stacks = self.get("STACKS." + sub_type)
+                if sub_stacks is not None:
+                    action.set("STACKS", sub_stacks)
+                elif base_stacks is not None:
+                    action.set("STACKS", base_stacks)
+                else:
+                    action.set("STACKS", "0")
 
             actions.append(action)
 
