@@ -42,7 +42,7 @@ class NPC_guard(GameActor):
         @param action: GameAction being performed
         @param actor: GameActor) initiating the action
         @param context: GameContext in which action is being taken
-        @return: (string) description of the effect
+        @return: (boolean success, string description of the effect)
 
         The only special things about a guard ar that, if attacked
         (1) he counter-attacks

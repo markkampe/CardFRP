@@ -54,7 +54,7 @@ class GameContext(GameObject):
         @param action: GameAction being performed
         @param actor: GameActor initiating the action
         @param context: GameContext in which the action is happening
-        @return: (string) description of the effect
+        @return: (boolean success, string description of the effect)
         """
 
         # A locale can be searched, turning up concealed things.

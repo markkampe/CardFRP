@@ -62,7 +62,7 @@ class GameObject(Base):
         @param action: GameAction being performed
         @param actor: GameActor initiating the action
         @param context: GameContext in which action is occuring
-        @return: (string) description of the effect
+        @return: (boolean success, string description of the effect)
         """
         # get the base verb and sub-type
         if '.' in action.verb:
