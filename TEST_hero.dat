@@ -17,6 +17,10 @@ PROTECTION		4
 ACCURACY		50
 DAMAGE			D4
 
+# saves
+RESISTANCE.PHYSICAL   50
+RESISTANCE.MENTAL     70
+
 OBJECT	
 	NAME            'long sword'
 	DESCRIPTION	    "Hero's sword"
