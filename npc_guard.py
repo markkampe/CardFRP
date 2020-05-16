@@ -20,6 +20,7 @@ class NPC_guard(GameActor):
         self.context = None
 
         # default attributes ... easily changed after instantiation
+        self.set("HP", 16)
         self.set("LIFE", 16)
         self.set("ACCURACY", 10)
         self.set("EVASION", 40)

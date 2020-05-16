@@ -2,9 +2,10 @@ NAME        Hero
 DESCRIPTION "test actor"
 
 # basic attributes for test hero
+HP			32
 LIFE			32
 EVASION			20
-POWER.PHYSICAL	25
+POWER.PHYSICAL		25
 
 # skill attributes
 ACTIONS			"PHYSICAL.PUSH,PHYSICAL.TRIP"

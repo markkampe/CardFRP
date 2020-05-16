@@ -132,12 +132,12 @@ def main():
                     target = npc
 
     print("\nAfter the combat:")
-    print("    {} has {} HP".format(actor.name, actor.get("LIFE")))
+    print("    {} has {} LIFE".format(actor.name, actor.get("LIFE")))
 
     npcs = local.get_npcs()
     for npc in npcs:
         if npc.alive:
-            print("    {} has {} HP".format(npc.name, npc.get("LIFE")))
+            print("    {} has {} LIFE".format(npc.name, npc.get("LIFE")))
         else:
             print("    {} is dead".format(npc.name))
 
@@ -145,13 +145,13 @@ def main():
     scroll = GameObject("Scroll of CLW")
     scroll.set("ACTIONS", "LIFE")
     scroll.set("POWER", 100)            # test base attribute
-    scroll.set("STACKS.LIFE", "D6+1")   # test sub-type attribute
+    scroll.set("STACKS.LIFE", "D12")    # test sub-type attribute
 
     print("\nHero reads " + str(scroll))
     clw = scroll.possible_actions(actor, local)[0]
     (_, desc) = clw.act(actor, actor, local)
     print("    " + desc)
-    print("    {} now has {} HP".format(actor.name, actor.get("LIFE")))
+    print("    {} now has {} LIFE".format(actor.name, actor.get("LIFE")))
 
     # test conditions compounded with an attack
     dagger = GameObject("Poison Dagger")

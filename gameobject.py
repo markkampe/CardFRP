@@ -106,10 +106,13 @@ class GameObject(Base):
         sign = 1 if int(action.get("TOTAL")) > 0 else -1
         if received > 0:
             have = self.get(action.verb)
-            if have is None:
-                self.set(action.verb, sign * received)
-            else:
-                self.set(action.verb, int(have) + sign * received)
+            have = 0 if have is None else int(have)
+            # special case: LIFE cannot be raised beyond HP
+            if action.verb == "LIFE" and self.get("HP") is not None:
+                max_hp = int(self.get("HP"))
+                if have + sign * received > max_hp:
+                    have = max_hp - received
+            self.set(action.verb, have + sign * received)
 
         return (received > 0,
                 "{} resists {}/{} stacks of {} from {} in {}"
