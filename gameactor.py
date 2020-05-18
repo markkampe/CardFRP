@@ -118,7 +118,7 @@ class GameActor(GameObject):
         @param actor: GameActor initiating the interactions
         @return: Interaction object
         """
-        interactions = GameObject("interactions w/" + self.name)
+        interactions = GameObject("interactions w/" + actor.name)
         verbs = self.get("INTERACTIONS")
         actions = ""
         if verbs is not None:
