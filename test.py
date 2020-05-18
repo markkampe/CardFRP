@@ -142,10 +142,7 @@ def main():
             print("    {} is dead".format(npc.name))
 
     # test conditions delivered from an artifact
-    scroll = GameObject("Scroll of CLW")
-    scroll.set("ACTIONS", "LIFE")
-    scroll.set("POWER", 100)            # test base attribute
-    scroll.set("STACKS.LIFE", "D12")    # test sub-type attribute
+    scroll = actor.get_object("CLW")
 
     print("\nHero reads " + str(scroll))
     clw = scroll.possible_actions(actor, local)[0]
@@ -173,10 +170,7 @@ def main():
             print("    " + line)
 
     # now do a negative fear
-    scroll = GameObject("Scroll of Courage")
-    scroll.set("ACTIONS", "MENTAL.FEAR")
-    scroll.set("POWER", 100)            # test base attribute
-    scroll.set("STACKS", -1)
+    scroll = actor.get_object("Courage")
 
     print("    {} now has FEAR of {}".format(actor.name,
                                              actor.get("MENTAL.FEAR")))

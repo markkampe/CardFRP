@@ -33,3 +33,17 @@ OBJECT
 	DAMAGE.slash	D6+2
 	DAMAGE.chop	    D4+2
 	DAMAGE.pierce	'4'
+
+OBJECT
+	NAME		"Scroll of CLW"
+	DESCRIPTION	"Cure Light Wounds"
+	ACTIONS		"LIFE"
+	POWER		100
+	STACKS		"D12"
+
+OBJECT
+	NAME		'Scroll of Courage'
+	DESCRIPTION	"Remove Fear"
+	ACTIONS		"MENTAL.FEAR"
+	POWER		100
+	STACKS		-2
