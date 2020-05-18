@@ -4,7 +4,6 @@ of the key classes can be used.
 """
 import argparse
 from random import randint
-from gameobject import GameObject
 from gameactor import GameActor
 from npc_guard import NPC_guard
 from gamecontext import GameContext
@@ -151,29 +150,25 @@ def main():
     print("    {} now has {} LIFE".format(actor.name, actor.get("LIFE")))
 
     # test conditions compounded with an attack
-    dagger = GameObject("Poison Dagger")
-    dagger.set("ACTIONS", "ATTACK.STAB")
-    dagger.set("ACCURACY", 10)
-    dagger.set("DAMAGE", "D8")
-
-    stab = dagger.possible_actions(actor, local)[0]
-    stab.set("POWER", "10,25")
-    stab.set("STACKS", "D6,2")
+    dagger = actor.get_object("Dagger")
 
     print("\nHero attacked by " + str(dagger))
     success = False
     while not success:
-        stab.verb = "ATTACK.STAB,PHYSICAL.POISON,MENTAL.FEAR"
+        stab = dagger.possible_actions(guard, local)[0]
         (success, desc) = stab.act(guard, actor, local)
         lines = desc.split("\n")
         for line in lines:
             print("    " + line)
+        for atr in ["PHYSICAL.POISON", "MENTAL.FEAR"]:
+            value = actor.get(atr)
+            if value is None:
+                continue
+            print("    {} now has {} of {}".format(actor.name, atr, value))
 
     # now do a negative fear
     scroll = actor.get_object("Courage")
 
-    print("    {} now has FEAR of {}".format(actor.name,
-                                             actor.get("MENTAL.FEAR")))
     print()
     print("{} reads {}".format(actor.name, scroll))
     bold = scroll.possible_actions(actor, local)[0]
