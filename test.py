@@ -105,7 +105,7 @@ def main():
     print()
 
     # find the Hero's sword
-    weapon = actor.get_objects()[0]
+    weapon = actor.get_object("sword")
 
     # play out the battle until hero or all guards are dead
     if args.no_combat:

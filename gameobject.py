@@ -48,6 +48,17 @@ class GameObject(Base):
 
         return reported
 
+    def get_object(self, name):
+        """
+        return a named object from my inventory
+        @param name: string to match against object name
+        @return: first matching object (or None)
+        """
+        for thing in self.objects:
+            if name in thing.name:
+                return thing
+        return None
+
     def add_object(self, item):
         """
         add another object to this context
