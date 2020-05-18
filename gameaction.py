@@ -156,7 +156,7 @@ class GameAction(Base):
 
         # get base stacks from the action
         if base is None:
-            stacks = 0
+            stacks = 1
         else:
             dice = Dice(base)
             stacks = dice.roll()
@@ -197,7 +197,7 @@ class GameAction(Base):
         for the verbs in question)
         """
         # pick up the verb(s) and associated attributes
-        verbs = self.verb.split(',') if ',' in self.verb else [self.verb]
+        verbs = self.verb.split('+') if '+' in self.verb else [self.verb]
         accuracies = self.get_list("ACCURACY", len(verbs))
         damages = self.get_list("DAMAGE", len(verbs))
         powers = self.get_list("POWER", len(verbs))
@@ -486,8 +486,8 @@ def compound_verbs():
     victim = TestRecipient("victim")
     lame = Base("unskilled sender")      # sender w/no skills
 
-    verbs = "ATTACK.one,MENTAL.two,ATTACK.three,PHYSICAL.four,VERBAL.five" + \
-            ",FAIL,WONT-HAPPEN"
+    verbs = "ATTACK.one+MENTAL.two+ATTACK.three+PHYSICAL.four+VERBAL.five" + \
+            "+FAIL+WONT-HAPPEN"
     action = GameAction(artifact, verbs)
     action.set("ACCURACY", "1,3")
     action.set("DAMAGE", "10,30")

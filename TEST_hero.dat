@@ -22,6 +22,7 @@ DAMAGE			D4
 RESISTANCE.PHYSICAL   50
 RESISTANCE.MENTAL     70
 
+# a weapon with multiple attacks
 OBJECT	
 	NAME            'long sword'
 	DESCRIPTION	    "Hero's sword"
@@ -34,6 +35,7 @@ OBJECT
 	DAMAGE.chop	    D4+2
 	DAMAGE.pierce	'4'
 
+# an object that delivers a condition
 OBJECT
 	NAME		"Scroll of CLW"
 	DESCRIPTION	"Cure Light Wounds"
@@ -41,9 +43,19 @@ OBJECT
 	POWER		100
 	STACKS		"D12"
 
+# an object that delivers a negativecondition
 OBJECT
 	NAME		'Scroll of Courage'
 	DESCRIPTION	"Remove Fear"
 	ACTIONS		"MENTAL.FEAR"
 	POWER		100
 	STACKS		-2
+
+# a weapon with compound effects
+OBJECT
+	NAME		"Poison Dagger"
+	ACTIONS		"ATTACK.STAB+PHYSICAL.POISON+MENTAL.FEAR"
+	ACCURACY	10
+	DAMAGE		"D8"
+	POWER		"10,25"
+	STACKS		"D4,2"

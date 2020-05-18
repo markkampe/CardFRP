@@ -133,6 +133,7 @@ class GameObject(Base):
                         actor, context))
 
     # pylint: disable=unused-argument; sub-classes are likely to use them
+    # pylint: disable=too-many-branches; there are a lot of cases
     def possible_actions(self, actor, context):
         """
         receive and process the effects of an action
@@ -163,7 +164,20 @@ class GameObject(Base):
         for verb in verbs.split(','):
             action = GameAction(self, verb)
 
-            # if is an ATTACK, we need to add ACCURACY and DAMAGE
+            # for compound actions, we simply collect base attributes
+            if "+" in verb:
+                if base_accuracy is not None:
+                    action.set("ACCURACY", base_accuracy)
+                if base_damage is not None:
+                    action.set("DAMAGE", base_damage)
+                if base_power is not None:
+                    action.set("POWER", base_power)
+                if base_stacks is not None:
+                    action.set("STACKS", base_stacks)
+                actions.append(action)
+                continue
+
+            # single actions may have verb-specific attributes
             if verb.startswith("ATTACK"):
                 # see if we have sub-type accuracy/damage
                 sub_accuracy = None
@@ -185,21 +199,21 @@ class GameObject(Base):
                     action.set("DAMAGE", base_damage)
                 else:
                     action.set("DAMAGE", "0")
-            else:   # condition, we need POWER and STACKS
-                sub_type = verb.split('.')[1] if '.' in verb else verb
-                sub_power = self.get("POWER." + sub_type)
+            else:
+                # see if we have sub-type power/stacks
+                sub_power = self.get("POWER." + verb)
                 power = 0 if base_power is None else int(base_power)
                 power += 0 if sub_power is None else int(sub_power)
                 action.set("POWER", power)
 
                 # FIX GameAction.STACKS is a formula and cannot be added
-                sub_stacks = self.get("STACKS." + sub_type)
+                sub_stacks = self.get("STACKS." + verb)
                 if sub_stacks is not None:
                     action.set("STACKS", sub_stacks)
                 elif base_stacks is not None:
                     action.set("STACKS", base_stacks)
                 else:
-                    action.set("STACKS", "0")
+                    action.set("STACKS", "1")
 
             actions.append(action)
 
