@@ -134,6 +134,7 @@ class GameObject(Base):
 
     # pylint: disable=unused-argument; sub-classes are likely to use them
     # pylint: disable=too-many-branches; there are a lot of cases
+    # pylint: disable=too-many-statements; there are a lot of cases
     def possible_actions(self, actor, context):
         """
         receive and process the effects of an action
@@ -149,71 +150,90 @@ class GameObject(Base):
             we simply use the sub-type value if present, else the
             base value.
         """
-        # get our base accuracy and damage (for ATTACK actions)
-        base_damage = self.get("DAMAGE")
-        base_accuracy = self.get("ACCURACY")
-        base_power = self.get("POWER")
-        base_stacks = self.get("STACKS")
-
         # get a list of possible actions with this weapon
         actions = []
         verbs = self.get("ACTIONS")
         if verbs is None:
             return []
 
-        for verb in verbs.split(','):
-            action = GameAction(self, verb)
+        # get our base accuracy/damage/power/stacks
+        base_accuracy = self.get("ACCURACY")
+        base_damage = self.get("DAMAGE")
+        base_power = self.get("POWER")
+        base_stacks = self.get("STACKS")
 
-            # for compound actions, we simply collect base attributes
-            if "+" in verb:
-                if base_accuracy is not None:
-                    action.set("ACCURACY", base_accuracy)
-                if base_damage is not None:
-                    action.set("DAMAGE", base_damage)
-                if base_power is not None:
-                    action.set("POWER", base_power)
-                if base_stacks is not None:
-                    action.set("STACKS", base_stacks)
-                actions.append(action)
-                continue
+        # instantiate a GameAction for each verb in our ACTIONS list
+        for compound_verb in verbs.split(','):
+            action = GameAction(self, compound_verb)
 
-            # single actions may have verb-specific attributes
-            if verb.startswith("ATTACK"):
-                # see if we have sub-type accuracy/damage
-                sub_accuracy = None
-                sub_damage = None
-                if verb.startswith('ATTACK.'):
-                    sub_type = verb.split('.')[1]
-                    sub_accuracy = self.get("ACCURACY." + sub_type)
-                    sub_damage = self.get("DAMAGE." + sub_type)
+            # verbs may be compound, each sub-verb having sub-type attributes
+            accuracies = ""
+            damages = ""
+            powers = ""
+            stacks = ""
+            for verb in compound_verb.split('+'):
+                if verb.startswith("ATTACK"):
+                    # see if we have sub-type accuracy/damage
+                    sub_accuracy = None
+                    sub_damage = None
+                    if verb.startswith('ATTACK.'):
+                        sub_type = verb.split('.')[1]
+                        sub_accuracy = self.get("ACCURACY." + sub_type)
+                        sub_damage = self.get("DAMAGE." + sub_type)
 
-                # combine the base and sub-type values
-                accuracy = 0 if base_accuracy is None else int(base_accuracy)
-                accuracy += 0 if sub_accuracy is None else int(sub_accuracy)
-                action.set("ACCURACY", int(accuracy))
+                    # combine the base and sub-type values
+                    accuracy = 0 if base_accuracy is None \
+                        else int(base_accuracy)
+                    accuracy += 0 if sub_accuracy is None \
+                        else int(sub_accuracy)
+                    if accuracies == "":
+                        accuracies = str(accuracy)
+                    else:
+                        accuracies += "," + str(accuracy)
 
-                # FIX GameAction.DAMAGE is a formula and cannot be added
-                if sub_damage is not None:
-                    action.set("DAMAGE", sub_damage)
-                elif base_damage is not None:
-                    action.set("DAMAGE", base_damage)
+                    # FIX GameAction.DAMAGE could be a (non-addable) D-formula
+                    if sub_damage is not None:
+                        damage = sub_damage
+                    elif base_damage is not None:
+                        damage = base_damage
+                    else:
+                        damage = 0
+                    if damages == "":
+                        damages = str(damage)
+                    else:
+                        damages += "," + str(damage)
                 else:
-                    action.set("DAMAGE", "0")
-            else:
-                # see if we have sub-type power/stacks
-                sub_power = self.get("POWER." + verb)
-                power = 0 if base_power is None else int(base_power)
-                power += 0 if sub_power is None else int(sub_power)
-                action.set("POWER", power)
+                    # see if we have sub-type power/stacks
+                    sub_power = self.get("POWER." + verb)
+                    power = 0 if base_power is None else int(base_power)
+                    power += 0 if sub_power is None else int(sub_power)
+                    if powers == "":
+                        powers = str(power)
+                    else:
+                        powers += "," + str(power)
 
-                # FIX GameAction.STACKS is a formula and cannot be added
-                sub_stacks = self.get("STACKS." + verb)
-                if sub_stacks is not None:
-                    action.set("STACKS", sub_stacks)
-                elif base_stacks is not None:
-                    action.set("STACKS", base_stacks)
-                else:
-                    action.set("STACKS", "1")
+                    # FIX GameAction.STACKS could be a (non-addable) D-formula
+                    sub_stacks = self.get("STACKS." + verb)
+                    if sub_stacks is not None:
+                        stack = sub_stacks
+                    elif base_stacks is not None:
+                        stack = base_stacks
+                    else:
+                        stack = 1
+                    if stacks == "":
+                        stacks = str(stack)
+                    else:
+                        stacks += "," + str(stack)
+
+                # add the accumulated attributes to the action
+                if accuracies != "":
+                    action.set("ACCURACY", accuracies)
+                if damages != "":
+                    action.set("DAMAGE", damages)
+                if powers != "":
+                    action.set("POWER", powers)
+                if stacks != "":
+                    action.set("STACKS", stacks)
 
             actions.append(action)
 
@@ -368,7 +388,7 @@ def weapon_test():
         "incorrect default action, expected 'ATTACK', got " + str(actions[0])
     assert actions[0].get("DAMAGE") == "666", \
         "incorrect base damage, expected '666', got " + str(actions[0])
-    assert actions[0].get("ACCURACY") == 66, \
+    assert actions[0].get("ACCURACY") == "66", \
         "incorrect base accuracy, expected 66, got " + str(actions[0])
     print("test #2: " + str(w_1) +
           " ... BASE ATTACK, ACCURACY and DAMAGE - CORRECT")
@@ -379,9 +399,9 @@ def weapon_test():
 
     attacks = [
         # verb,    accuracy, damage, exp acc, exp dmg
-        ("ATTACK",       50,   "D5",      50,    "D5"),
-        ("ATTACK.60",    10,   "D6",      60,    "D6"),
-        ("ATTACK.70",    20,   "D7",      70,    "D7")]
+        ("ATTACK",       50,   "D5",    "50",    "D5"),
+        ("ATTACK.60",    10,   "D6",    "60",    "D6"),
+        ("ATTACK.70",    20,   "D7",    "70",    "D7")]
     verbs = None
     for (verb, accuracy, damage, exp_acc, exp_dmg) in attacks:
         if verbs is None:
