@@ -32,6 +32,14 @@ class Dice(object):
         elif not isinstance(formula, str):
             raise ValueError("non-string dice expression")
 
+        # if it is just a number, this is simple
+        if formula.isnumeric():
+            self.plus = int(formula)
+            return
+        elif formula[0] == '-' and formula[1:].isnumeric():
+            self.plus = int(formula)
+            return
+
         # figure out what kind of expression this is
         delimiter = None
         if 'D' in formula:
@@ -43,9 +51,6 @@ class Dice(object):
         elif '-' in formula:
             delimiter = '-'
             values = formula.split(delimiter)
-        elif formula.isnumeric():
-            self.plus = int(formula)
-            return
 
         # see if it has known form and 2 values
         if delimiter is None or len(values) != 2:
@@ -89,7 +94,7 @@ class Dice(object):
                 descr += "+{}".format(self.plus)
         elif self.min_value is not None and self.max_value is not None:
             descr = "{}-{}".format(self.min_value, self.max_value)
-        elif self.plus > 0:
+        elif self.plus != 0:
             descr = str(self.plus)
         else:
             descr = ""
@@ -179,6 +184,10 @@ def main():
 
     tests_run += 1
     if test(47, 47, 47, 10):
+        tests_passed += 1
+
+    tests_run += 1
+    if test("-3", -3, -3, 10):
         tests_passed += 1
 
     # test detection of invalid expressions
