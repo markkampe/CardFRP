@@ -439,7 +439,120 @@ def weapon_test():
                      "sub-type only" if "." in verb else "base only"))
 
 
+# pylint: disable=too-many-statements
+def compound_test():
+    """
+    Test for attribute collection for compound actions
+    """
+    obj = GameObject("Compound Actions w/base attributes")
+    first = "ATTACK.one+CONDITION.two+ATTACK.three+CONDITION.four"
+    second = "ATTACK.five+CONDITION.six"
+    obj.set("ACTIONS", first + "," + second)
+    obj.set("ACCURACY", 10)
+    obj.set("ACCURACY.one", 5)
+    obj.set("DAMAGE", "60")
+    obj.set("DAMAGE.one", 666)
+
+    obj.set("POWER", "20")
+    obj.set("POWER.CONDITION.two", 10)
+    obj.set("STACKS", 3)
+    obj.set("STACKS.CONDITION.two", 6)
+
+    obj.set("ACCURACY.five", 15)
+    obj.set("DAMAGE.five", 55)
+    obj.set("POWER.CONDITION.six", 6)
+    obj.set("STACKS.CONDITION.six", 66)
+
+    actions = obj.possible_actions(None, None)
+    for action in actions:
+        if action.verb == first:
+            # attack accuracy = [base+sub, base-only]
+            accuracies = action.get("ACCURACY").split(',')
+            assert accuracies[0] == "15", "ACCURACY.one not added"
+            assert accuracies[1] == "10", "base ACCURACY not used"
+
+            # attack damage = [sub, base-only]
+            damages = action.get("DAMAGE").split(',')
+            assert damages[0] == "666", "DAMAGE.one not used"
+            assert damages[1] == "60", "base DAMAGE not used"
+            print("test #4a: {} {} ...\n\t  ACCURACY(S), DAMAGE(S) - CORRECT".
+                  format(obj.name, action.verb))
+
+            # condition power = [base+sub, base=only]
+            powers = action.get("POWER").split(',')
+            assert powers[0] == "30", "POWER.two not added in"
+            assert powers[1] == "20", "base POWER not used"
+
+            # condition stacks = [sub, base=only]
+            stacks = action.get("STACKS").split(',')
+            assert stacks[0] == "6", "STACKS.two not used"
+            assert stacks[1] == "3", "base STACKS not used"
+            print("test #4b: {} {} ...\n\t  POWER(S), STACKS(S) - CORRECT".
+                  format(obj.name, action.verb))
+        elif action.verb == second:
+            accuracies = action.get("ACCURACY").split(',')
+            assert accuracies[0] == "25", "ACCURACY.five not added"
+            damages = action.get("DAMAGE").split(',')
+            assert damages[0] == "55", "DAMAGE.five not used"
+
+            powers = action.get("POWER").split(',')
+            assert powers[0] == "26", "POWER.six not added in"
+            stacks = action.get("STACKS").split(',')
+            assert stacks[0] == "66", "STACKS.six not used"
+            print("test #4c: {} {} ... \n\tPOWER, STACKS - CORRECT".
+                  format(obj.name, action.verb))
+        else:
+            assert False, "Incorrect verb: " + action.verb
+
+    # next set of tests are combinations w/no base attributes
+    obj = GameObject("Compound Actions w/o base attributes")
+    first = "ATTACK.seven+CONDITION.eight+ATTACK.nine+CONDITION.ten"
+    obj.set("ACTIONS", first)
+    obj.set("ACCURACY.seven", 7)
+    obj.set("DAMAGE.seven", "777")
+
+    obj.set("POWER.CONDITION.eight", 8)
+    obj.set("STACKS.CONDITION.eight", "88")
+
+    actions = obj.possible_actions(None, None)
+    assert len(actions) == 1, \
+        "Incorrect actions: expected 1, got {}".format(len(actions))
+    action = actions[0]
+    assert action.verb == first, \
+        "Incorrect action: expected {}, got {}".format(first, action.verb)
+
+    # attack accuracy = [sub, None]
+    accuracies = action.get("ACCURACY").split(',')
+    assert accuracies[0] == "7", "ACCURACY.seven not used"
+    assert accuracies[1] == "0", \
+        "expected ACCURACY=0, got {}".format(accuracies[1])
+
+    # attack damage = [sub, None]
+    damages = action.get("DAMAGE").split(',')
+    assert damages[0] == "777", "DAMAGE.seven not used"
+    assert damages[1] == "0", \
+        "expected DAMAGE=0, got {}".format(damages[1])
+
+    print("test #4d: {} {} ... \n\tACCURACY, DAMAGE - CORRECT".
+          format(obj.name, action.verb))
+
+    # condition power = [base+sub, base=only]
+    powers = action.get("POWER").split(',')
+    assert powers[0] == "8", "POWER.eight not used"
+    assert powers[1] == "0", \
+        "expected POWER=0, got {}".format(powers[1])
+
+    # condition stacks = [sub, base=only]
+    stacks = action.get("STACKS").split(',')
+    assert stacks[0] == "88", "STACKS.eight not used"
+    assert stacks[1] == "1", "default STACKS=1 not used"
+
+    print("test #4e: {} {} ... \n\tPOWER, STACKS - CORRECT".
+          format(obj.name, action.verb))
+
+
 if __name__ == "__main__":
     action_test()
     weapon_test()
+    compound_test()
     print("All GameObject test cases passed")
