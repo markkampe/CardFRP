@@ -1,0 +1,146 @@
+<HTML>
+<title>CardFRP</title>
+<HEAD>
+</HEAD>
+<center>
+<H2>CardFRP - Architectural Overview</H2>
+</center>
+<P>
+CardFRP is an underlying (not player-facing) engine that simulates the
+attributes and interactions of characters and objects in locations.
+It is intended to be able to support computerized versions of card-based
+FRPGs, where players act by playing cards from their current hand.
+</P>
+<P>
+The most important classes in this engine are:
+<ul>
+    <li><A Href="#GameObject">GameObject</a>s, which implement most objects,
+    	and serve as the base class for:
+	<ul>
+	    <li><A href="#GameActor">GameActor</a>s (characters, player
+	    	and non-player)</li>
+	    <li><A href="#GameContext">GameContext</a>s (rooms, caves, 
+	    	woods and other locations where things happen)</li>
+	</ul>
+    </li>
+    <li><A Href="#GameAction">GameAction</a>s, which implement interactions
+    	between objects and characters in locations.
+    </li>
+    <li><A Href="#Dice">Dice</a>, which can roll according to common formula.
+    </li>
+</ul>
+<A name="Base"><H3>Base class</H3></a>
+<P>
+All objects in the game engine have:
+<ul>
+    <li> a (string) name</li>
+    <li> a (string) description</li>
+    <li> a list of named attributes (with values of any type)</li>
+</ul>
+and implement 
+<ul>
+   <li> a <tt>__str__()</tt> method to return an informative name</li>
+   <li> <tt>set()</tt> and <tt>get()</tt> methods to manage and retrieve attributes</li>
+</ul>
+</P>
+
+<A name="GameObject"><H3>GameObject</H3></a>
+<P>
+A <A href="html/gameobject.GameObject-class.html">GameObject</A> ...
+<ul>
+    <li>has a list of (string) verbs that describe the actions of which it is capable</li>
+    <li>is capable of receiving, and computing consequences of an action</li>
+    <li>can posssess or contain other GameObjects</li>
+</ul>
+It implements methods to:
+<ul>
+    <li>return a list of supported <em>GameAction</em>s</li>
+    <li>update, search, and return the list of contained <em>GameObject</em>s</li>
+    <li>accept a <em>GameAction</em> and compute and return its consequences</li>
+</ul>
+</P>
+
+<strong>GameObject Submissions</strong>
+<ul>
+   <li><a href="gameobject-spec.py">Specifications</a></li>
+   <li><a href="gameobject.py">Design</a></li>
+   <li><a href="testing.html#gameobject">Test Plan</a></li>
+</ul>
+
+<A name="GameAction"><H3>GameAction</H3></a>
+<P>
+A <A <A href="html/gameaction.GameAction-class.html">GameAction</A> is based 
+on a verb (which might be compound or have sub-types).  Examples might be:
+<ul>
+    <li>SEARCH</LI>
+    <li>MENTAL.INTIMMIDATE</li>
+    <li>ATTACK.STAB+ATTACK.POISON</li>
+</ul>
+A <em>GameObject</em> has attributes that describe the skill and impact with
+which its actions will be executed:
+<ul>
+   <li> skill is described as a percentage ... 
+   	<tt>ACCURACY</tt> for <tt>ATTACK</tt> verbs and 
+	<tt>POWER</tt> for others.</li>
+   <li> impact is described as a dice formula ...
+   	<tt>DAMAGE</tt> for <tt>ATTACK</tt> verbs and
+   	<tt>STACKS</tt> for others.</li>
+</ul>
+The initiator <em>GameActor</em> who performs the action may have additional
+bonuses (in attributes like <tt>DAMAGE</tt> or
+<tt>POWER.MENTAL.INTIMMIDATE</tt>) ... which will be added to the base
+values in the <em>GameAction</em>.
+</P>
+<P>
+When the <em>GameAction</em><tt>.act()</tt> method is called
+(from an initiator, against a target, in a location)
+<ol type="1">
+   <li>The <em>GameAction</em> adds together all of the base and 
+       initiator bonses, and
+       Stores these in <tt>TO_HIT</tt> and <tt>TOTAL</tt> attributes</li>
+   <li>Calls the target's <tt>accept_action()</tt> method</li>
+   <li>Target adds together all of its applicable <tt>RESISTANCE</tt> attributes</li>
+   <li>If the sum of the target's <tt>RESISTANCE</tt>s is greater than or equal to the
+       incoming <tt>TO_HIT</tt>, the action fails.</li>
+   <li>For each incoming unit (of <tt>TOTAL</tt>) the target rolls D100 
+       against the amount by which <tt>TOTAL</tt> exceeded <tt>RESISTANCE</tt>.<br>
+       If the D100 roll is less than that net-power, one unit of action gets through.</li>
+   <li>For the simple actions (supported by this base class), any action that gets
+       through results in an increment (or decrement for <tt>ATTACK</tt>s) of the
+       attribute whose name matches the successful verb.
+       (e.g. if two stacks of <tt>MENTAL.IMTIMMIDATE</tt> get past the recipient's 
+       <tt>RESISTANCE.MENTAL</tt>, the recipient's <tt>INTIMMIDATE</tt> attribute
+       will be incremented by two).
+       </li>
+</ol>
+</P>
+<strong>GameAction Submissions</strong>
+<ul>
+   <li><a href="gameaction-spec.py">Specifications</a> (and <a href="dice-spec.py">Dice</a>)</li>
+   <li><a href="gameaction.py">Design</a> (and <a href="dice.py">Dice</a>)</li>
+   <li><a href="testing.html#gameaction">Test Plan</a> (and <a href="testing.html#dice">Dice</a>)</li>
+</ul>
+
+<A name="GameActor"><H3>GameActor</H3></a>
+<P>
+A <A href="html/gameactor.GameActor-class.html">GameActor</A> is
+<strong>GameActor Submissions</strong>
+<ul>
+   <li><a href="gameactor-spec.py">Specifications</a></li>
+   <li><a href="gameactor.py">Design</a></li>
+   <li><a href="testing.html#gameactor">Test Plan</a></li>
+</ul>
+
+<A name="GameContext"><H3>GameContext</H3></a>
+<P>
+A <A href="html/gamecontext.GameContext-class.html">GameContext</A> is
+</P>
+<strong>GameContext Submissions</strong>
+<ul>
+   <li><a href="gamecontext-spec.py">Specifications</a></li>
+   <li><a href="gamecontext.py">Design</a></li>
+   <li><a href="testing.html#gamecontext">Test Plan</a></li>
+</ul>
+<BODY>
+</BODY>
+</HTML>
