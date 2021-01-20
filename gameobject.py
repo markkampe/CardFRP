@@ -7,10 +7,15 @@ from gameaction import GameAction
 
 class GameObject(Base):
     """
-    This is the base class for all objects and actors.
-    Its only abilities are
-        - to own objects
-        - to offer and accept actions.
+    This is the base class for all artifacts, actors, and contexts.
+    The only abilities of this base class are:
+        - to own objects (which can be added and retrieved)
+        - to return a list of enabled GameActions
+        - to accept GameActions (this is the complex one)
+
+    @ivar objects: list of GameObjects
+
+    objects can be I{hidden} in which case they might not show up
     """
     def __init__(self, name="actor", descr=None):
         """
@@ -23,14 +28,21 @@ class GameObject(Base):
 
     def __str__(self):
         """
-        return string description of this weapon
+        return descriptive string for this GameObject
         """
         return self.name
 
     def get_objects(self, hidden=False):
         """
-        @param hidden: hidden (rather than obvious) objects
-        @return: list of GameOjects in this context
+        return a list of GameObjects owned by this GameObject
+
+        if an object is hidden (has a positive RESISTANCE.SEARCH) it may not
+        be visible unless
+            - it has been successfully found (SEARCH > 0)
+            - caller specifies that hidden objects should be returned
+
+        @param hidden: return only hidden objects
+        @return: list of discoverd GameOjects
         """
         reported = []
         for thing in self.objects:
@@ -51,6 +63,7 @@ class GameObject(Base):
     def get_object(self, name):
         """
         return a named object from my inventory
+
         @param name: string to match against object name
         @return: first matching object (or None)
         """
@@ -61,7 +74,7 @@ class GameObject(Base):
 
     def add_object(self, item):
         """
-        add another object to this context
+        add another object to my inventory (if not already there)
         """
         if item not in self.objects:
             self.objects.append(item)
@@ -69,11 +82,29 @@ class GameObject(Base):
     # pylint: disable=too-many-locals
     def accept_action(self, action, actor, context):
         """
-        receive and process the effects of an action
+        called by C{GameAction.act()}, to receive a GameAction
+        and determine its effects:
+            1. get the base verb and subtype
+            2. determine our RESISTANCE, RESISTANCE.base, RESISTANCE.subtype
+            3. if our resistance > action.TO_HIT, action fails
+            4. figure out how many (of TOTAL) get through (D100 < POWER)
+            5. add or subtract (for attacks) that to/from affected attribute
+            6. return success (if any got through) and detailed description
+               of what was resisted and what got through.
+
+        This base class is intended to handle any action that simply raises
+        or lowers an attribute
+        (e.g. an ATTACK that reduces LIFE, a spell that increases FEAR or
+        CONFIDENCE, or SEARCH to find hidden objects).
+        Actions with more complex effects must be handled by a sub-class
+        C{accept_action()} that overrides this medhod (at least for the
+        actions in question).
 
         @param action: GameAction being performed
         @param actor: GameActor initiating the action
-        @param context: GameContext in which action is occuring
+        @param context: GameContext in which action is occuring ...
+            unused by this base class, but likely useful to sub-classes
+            that support more complex actions.
         @return: (boolean success, string description of the effect)
         """
         # get the base verb and sub-type
@@ -137,7 +168,20 @@ class GameObject(Base):
     # pylint: disable=too-many-statements; there are a lot of cases
     def possible_actions(self, actor, context):
         """
-        receive and process the effects of an action
+        return list of the actions this object enables
+            - get list of supported (compound) verbs from ACTIONS attribute
+            - for each distinct verb (which may still be compound)
+                - instantiate a GameAction
+                - for each sub-verb
+                -   figure out ACCURACY, DAMAGE, POWER, STACKS
+                -   accumulate a list of these values
+            - set the ACCURACY/DAMAGE/POWER/STACKS list for the GameAction
+            - append the completed GameAction to our list
+
+        our abilities:
+            - base ACCURACY, DAMAGE, POWER, STACKS are in those attributes
+            - attack sub-type bonuses in ACCURACY.subtype and DAMAGE.subtype
+            - non-attack bonuses are in POWER.verb and STACKS.verb
 
         @param actor: GameActor initiating the action
         @param context: GameContext in which the action is taken
@@ -150,7 +194,7 @@ class GameObject(Base):
         we simply use the sub-type value if present, else the
         base value.
         """
-        # get a list of possible actions with this weapon
+        # get a list of possible actions with this object (e.g. weapon)
         actions = []
         verbs = self.get("ACTIONS")
         if verbs is None:
@@ -241,7 +285,17 @@ class GameObject(Base):
 
     def load(self, filename):
         """
-        read attributes from a file
+        read (potentially nested) object definitions from a file
+            - blank lines and lines beginning w/# are ignored
+            - NAME string ... is the name of an object
+            - DESCRIPTION string ... is the description of that object
+            - ACTIONS string ... is the list of supported verbs
+            - OBJECT ... introduces definition of an object in our inventory
+            - anything else is an atribute and value (strings should be quoted)
+
+        Object nesting is possible because one object can contain another
+        (e.g. a guard has a sword, a box contains a scroll).
+
         @param filename: name of file to be read
         """
         cur_object = self
@@ -273,7 +327,11 @@ class GameObject(Base):
 
 def _lex(line):
     """
-    try to lex a name and (potentially quoted) value from a line
+    helper function to lex a name and (potentially quoted) value from a line
+        - ignore comments and blank lines ... return (None, None)
+        - treat (single or double) quoted strings as a single token
+        - if second token is an integer, return it as such, else a string
+
     @param line: string to be lexed
     @return: (name, value)
     """
