@@ -9,8 +9,8 @@ class GameObject(Base):
     """
     This is the base class for all objects and actors.
     Its only abilities are
-        to own objects
-        to offer and accept actions.
+        - to own objects
+        - to offer and accept actions.
     """
     def __init__(self, name="actor", descr=None):
         """
@@ -144,11 +144,11 @@ class GameObject(Base):
         @return: list of possible GameActions
 
         PROBLEM:
-            Base and sub-type ACCURACY values add, as they should.
-            This is harder to do with DAMAGE because those are not
-            (easily added) values, but dice formulae.  For now,
-            we simply use the sub-type value if present, else the
-            base value.
+        Base and sub-type ACCURACY values add, as they should.
+        This is harder to do with DAMAGE because those are not
+        (easily added) values, but dice formulae.  For now,
+        we simply use the sub-type value if present, else the
+        base value.
         """
         # get a list of possible actions with this weapon
         actions = []

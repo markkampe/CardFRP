@@ -332,7 +332,7 @@ class TestRecipient(Base):
 def base_attacks():
     """
     GameAction test cases:
-      TO_HIT and DAMAGE computations for base ATTACKs
+        - TO_HIT and DAMAGE computations for base ATTACKs
     """
 
     # create a victim and context
@@ -379,7 +379,7 @@ def base_attacks():
 def subtype_attacks():
     """
     GameAction test cases:
-      TO_HIT and DAMAGE computations for sub-type attacks
+        - TO_HIT and DAMAGE computations for sub-type attacks
     """
 
     # create a victim and context
@@ -432,7 +432,7 @@ def subtype_attacks():
 def base_conditions():
     """
     GameAction test cases:
-      TO_HIT and STACKS computations for base CONDITIONS
+      - TO_HIT and STACKS computations for base CONDITIONS
     """
 
     # create a victim and context
@@ -478,7 +478,7 @@ def base_conditions():
 def subtype_conditions():
     """
     GameAction test cases:
-      TO_HIT and TOTAL computations for sub-type attacks
+      - TO_HIT and TOTAL computations for sub-type attacks
     """
 
     # create a victim and context
@@ -531,8 +531,8 @@ def subtype_conditions():
 def compound_verbs():
     """
     GameAction test cases:
-      recognition of compound verbs
-      and correct matching of list attributes to each
+      - recognition of compound verbs
+        and correct matching of list attributes to each
     """
     context = Base("unit-test")
     artifact = Base("test-case")
