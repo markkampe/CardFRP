@@ -250,7 +250,7 @@ class GameObject(Base):
             infile = open(filename, "r")
             for line in infile:
                 # see if we can lex it into two white-space separated fields
-                (name, value) = lex(line)
+                (name, value) = __lex(line)
                 if name is None:
                     continue
 
@@ -271,7 +271,7 @@ class GameObject(Base):
                              format(filename))
 
 
-def lex(line):
+def __lex(line):
     """
     try to lex a name and (potentially quoted) value from a line
     @param line: string to be lexed
