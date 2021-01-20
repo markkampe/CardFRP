@@ -8,16 +8,26 @@ from random import randint
 # pylint: disable=too-few-public-methods
 class Dice(object):
     """
-    This class implements formulae and rolls against them
+    This class supports formula based dice rolls.
+    The formulae can be described in a few (fairly standard) formats:
+        - DnD style ... D100, 3D6, 3D6+4
+        - ranges ... 4-12
+        - simple numbers ... 50
+
+    @ivar num_dice: (int) number of dice to be rolled, None if a range
+    @ivar dice_type: (int) number of faces on each die, None if a range
+    @ivar plus: (int) number to be added to the roll
+    @ivar min_value: (int) lowest legal value in range, None if a formula
+    @ivar max_value: (int) highest legal value range, None if a formula
     """
 
     # pylint: disable=too-many-branches
     def __init__(self, formula):
         """
-        @param formula: description of roll, expressed as ...
-            * dice (e.g. "D100", "3D6+2" or "D%")
-            * a range of inclusive values (e.g. "3-18")
-            * a simple number (e.g. "14")
+        instantiate a roller for a specified formula
+
+        @param formula: (string) description of roll
+        @raise ValueError: illegal formula expression
         """
         self.num_dice = None
         self.dice_type = None
@@ -103,7 +113,8 @@ class Dice(object):
 
     def roll(self):
         """
-        roll this set of dice
+        roll this set of dice and return result
+        @return: (int) resulting value
         """
         total = 0
 

@@ -4,7 +4,10 @@
 class Base(object):
     """
     This is the base class for all other classes
-    All it has is a name, description, and attributes.
+
+    @ivar name:         name of this object
+    @ivar description:  one line this description
+    @ivar attributes:   dict of <name,value> pairs"
     """
 
     def __init__(self, name, descr=None):
