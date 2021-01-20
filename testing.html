@@ -1,0 +1,191 @@
+<HTML>
+<HEAD>
+<TITLE>Testing</TITLE>
+</HEAD>
+<BODY>
+<A name="gameobject"/><H3>GameObject Unit Testing</H3>
+
+<A name="gameaction"/><H3>GameAction Unit Testing</H3>
+<P>
+The interesting code is in the <tt>act()</tt> method, where
+we want to ensure that, given a verb, the right base and
+initiator bonuses are used to compute the correct
+<tt>TO_HIT</tt> and <tt>TOTAL</tt> attributes before
+passing the action to the target.  More specifically:
+<ul>
+   <li> the correct attributes (ACCURACY vs POWER,
+   	and POWER vs STACKS) are used, depending on the verb</li>
+   <li> the correct base verb values are used </li>
+   <li> correct sub-type values are used </li>
+   <li> compound verbs result in the correct sequence of 
+   	GameActions being delivered</li>
+</ul>
+We will do this do this by creating appriate <em>GameAction</em>s
+and using their <tt>act()</tt> method to send them to a
+test target that returns a result string that describes
+all of the parameters it receives.
+</P>
+<P>
+The processing involved in the sub-type and compound verb tests is sufficiently
+complex that these should count as <u>white-box</u> test cases.
+</P>
+<P>
+The base-case <tt>ATTACK</tt> and condition delivery tests will simply ensure that 
+the correct base attributes (<tt>ACCURACY</tt> and <tt>DAMAGE</tt>
+or <tt>POWER</tt> and <tt>STACKS</tt>) are used for <em>GameAction</em>s
+with both base-case verbs and sub-typed verbs:
+<TABLE border="1">
+    <tr><th>verb</th>
+    	<th>ACCURACY</th>
+	<th>DAMAGE</th>
+	<th>expected TO_HIT</th>
+	<th>expected TOTAL</th>
+    </tr>
+    <tr> <td>"ATTACK"</td>		<td>None</td>	<td>"1"</td>	<td>100</td>	<td>1</td> </tr>
+    <tr> <td>"ATTACK.ten"</td>		<td>10</td>	<td>"10"</td>	<td>110</td>	<td>10</td> </tr>
+    <tr> <td>"ATTACK.twenty"</td>	<td>20</td>	<td>"20"</td>	<td>120</td>	<td>20</td> </tr>
+    <tr> <td>"ATTACK.thirty"</td>	<td>30</td>	<td>"30"</td>	<td>130</td>	<td>30</td> </tr>
+</TABLE>
+</P>
+<P>
+<TABLE border="1">
+    <tr><th>verb</th>
+    	<th>POWER</th>
+	<th>STACKS</th>
+	<th>expected TO_HIT</th>
+	<th>expected TOTAL</th>
+    </tr>
+    <tr> <td>"MENTAL"</td>	<td>None</td>	<td>"1"</td>	<td>100</td>	<td>1</td> </tr>
+    <tr> <td>"MENTAL.X"</td>	<td>10</td>	<td>"10"</td>	<td>110</td>	<td>10</td> </tr>
+    <tr> <td>"MENTAL.Y"</td>	<td>20</td>	<td>"20"</td>	<td>120</td>	<td>20</td> </tr>
+    <tr> <td>"MENTAL.Z"</td>	<td>30</td>	<td>"30"</td>	<td>130</td>	<td>30</td> </tr>
+</TABLE>
+</P>
+<P>
+The sub-type <tt>ATTACK</tt> and condition delivery tests will ensure that the 
+correct (base or sub-type) initiator (<tt>ACCURACY</tt> and <tt>DAMAGE</tt>
+or <tt>POWER</tt> and <tt>STACKS</tt>) attributes are used for <em>GameAction</em>s
+with both base-case verbs and sub-typed verbs.
+</P>
+<P>
+The initiator will have:
+<ul>
+   <li>	ACCURACY=10, DAMAGE="10"</li>
+   <li>	ACCURACY.twenty=20, DAMAGE.twenty="20"</li>
+   <li>	ACCURACY.thirty=30, DAMAGE.thirty="30"</li>
+   <li>	POWER.MENTAL=10, STACKS.MENTAL="10"</li>
+   <li>	POWER.MENTAL.Y=20, STACKS.MENTAL.Y="20"</li>
+   <li>	POWER.MENTAL.Z=30, STACKS.MENTAL.Z="30"</li>
+
+</ul>
+We will then initiate the following Game actions and ensure that the correct 
+(base plus sub-type) initiator bonuses have been added to the <tt>TO_HIT</tt> and <tt>TOTAL</tt>
+<TABLE border="1">
+    <tr><th>verb</th>
+    	<th>ACCURACY</th>
+	<th>DAMAGE</th>
+	<th>expected TO_HIT</th>
+	<th>expected TOTAL</th>
+    </tr>
+    <tr> <td>"ATTACK"</td>		<td>None</td>	<td>"1"</td>	<td>110</td>	<td>11</td> </tr>
+    <tr> <td>"ATTACK.ten"</td>		<td>10</td>	<td>"10"</td>	<td>120</td>	<td>20</td> </tr>
+    <tr> <td>"ATTACK.twenty"</td>	<td>20</td>	<td>"20"</td>	<td>150</td>	<td>50</td> </tr>
+    <tr> <td>"ATTACK.thirty"</td>	<td>30</td>	<td>"30"</td>	<td>170</td>	<td>70</td> </tr>
+</TABLE>
+</P>
+<P>
+<TABLE border="1">
+    <tr><th>verb</th>
+    	<th>POWER</th>
+	<th>STACKS</th>
+	<th>expected TO_HIT</th>
+	<th>expected TOTAL</th>
+    </tr>
+    <tr> <td>"MENTAL"</td>	<td>None</td>	<td>"1"</td>	<td>110</td>	<td>11</td> </tr>
+    <tr> <td>"MENTAL.X"</td>	<td>10</td>	<td>"10"</td>	<td>120</td>	<td>20</td> </tr>
+    <tr> <td>"MENTAL.Y"</td>	<td>20</td>	<td>"20"</td>	<td>150</td>	<td>50</td> </tr>
+    <tr> <td>"MENTAL.Z"</td>	<td>30</td>	<td>"30"</td>	<td>170</td>	<td>70</td> </tr>
+</TABLE>
+</P>
+<P>
+To test compound verbs, we will create an artifact with a compound attack
+(with different <tt>ACCURACY</tt>, <tt>DAMAGE</tt>, <tt>POWER<tt> and <tt>STACKS</tt>
+for each of the individual verbs), send that compound action to the
+<em>GameAction</em>.<tt>act()</tt> method, and confirm (with the test target response)
+that each of the individual verbs was delivered separately, in-order, with the
+correct <tt>ACCURACY</tt>, <tt>DAMAGE</tt>, <tt>POWER</tt> and <tt>STACKS</tt>:
+<ul>
+    <li> verb = "ATTACK.one+MENTAL.two+ATTACK.three+PHYSICAL.four+VERBAL.five+FAIL+WONT-HAPPEN"</li>
+    <li> <tt>ACCURACY</tt> = "1,3"</li>
+    <li> <tt>DAMAGE</tt> = "10,30"</li>
+    <li> <tt>POWER</tt> = "2,4,5,0"</li>
+    <li> <tt>STACKS</tt> = "2,4,5,0"</li>
+</ul>
+Expected results:
+<ul>
+    <li> ATTACK.one (TO_HIT=101, DAMAGE=10)</li>
+    <li> MENTAL.two (TO_HIT=102, STACKS=2)</li>
+    <li> ATTACK.three (TO_HIT=103, DAMAGE=30)</li>
+    <li> PHYSICAL.four (TO_HIT=104, STACKS=4)</li>
+    <li> VERBAL.five (TO_HIT=105, STACKS=5)</li>
+    <li> resists FAIL ... because the base and initiator powers were both 0</li>
+</ul>
+A compound verb action stops as soon as one of the sub-verbs fail.
+Since the <tt>FAIL</tt> action will be succesfully resisted,
+the results should include no mention of the <tt>WONT-HAPPEN</tt> action.
+</p>
+
+<A name="dice"/><H3>Dice Unit Testing</H3>
+<P>
+The <em>Dice</em> class is simple and independent, and so should be
+very easy to test.  There are two obvious types of tests:
+<ul>
+    <li> tests of all types of legal formula, to make sure
+         that the (a) are accepted and (b) that they result
+	 in correct rolls.</li>
+    <li> tests of likely illegal formula, to make sure that
+         they are rejected.</li>
+</ul>
+The easiest way to test correct rolling is to do many more rolls
+than the range width, and ensure that all returned rolls are 
+within the expected range.  I will write a routine:
+<pre>
+    test(
+	 string formula,	# dice roll formula
+	 int min_expected,	# lowest legal return value
+	 int max_expected,	# highest legal return value
+	 int num_rolls)		# number of rolls to test
+</pre>
+that will do this, and use it to test
+<TABLE border="1">
+    <tr><th align=center>formula</th>
+    	<th align=center>min expected</th>
+	<th align=center>max expected</th>
+	<th align=center>num rolls</th> </tr>
+    <tr> <td>"3D4"</td>		<td>3</td>	<td>12</td>	<td>40</td> </tr>
+    <tr> <td>"d20"</td>		<td>1</td>	<td>20</td>	<td>80</td> </tr>
+    <tr> <td>"D%"</td>		<td>1</td>	<td>100</td>	<td>300</td> </tr>
+    <tr> <td>"2D2+3"</td>	<td>5</td>	<td>7</td>	<td>7</td> </tr>
+    <tr> <td>"3-9"</td>		<td>3</td>	<td>9</td>	<td>9</td> </tr>
+    <tr> <td>"47"</td>		<td>47</td>	<td>47</td>	<td>10</td> </tr>
+    <tr> <td>47</td>		<td>47</td>	<td>47</td>	<td>10</td> </tr>
+    <tr> <td>"-3"</td>		<td>-3</td>	<td>-3</td>	<td>10</td> </tr>
+</TABLE>
+</P>
+
+<P>
+The obvious formula errors are typos and missing values:
+<ul>
+    <li> missing number of faces (e.g. "2D")</li>
+    <li> non-numeric limits, number of dice, or number of faces (e.g. "D", "xDy", "x-y")</li>
+    <li> ranges where the last number is missing or lower than the first (e.g. "-", "4-2", "3-")</li>
+    <li> ranges using a separator other than "-" (e.g. "7 to 9")</li>
+</ul>
+
+
+<A name="gameactor"/><H3>GameActor Unit Testing</H3>
+
+<A name="gamecontext"/><H3>GameContext Unit Testing</H3>
+
+<A name="integrated"/><H3>Whole Component Testing</H3>
+</BODY>
