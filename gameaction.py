@@ -28,11 +28,11 @@ class GameAction(Base):
         -   VERBAL.INTIMMIDATE
         -   ATTACK.STAB
 
-    attributes set by client:
+    attributes to be set by client after instantiation:
         - ATTACK verbs are expected to have ACCURACY (to-hit percentage) and
           DAMAGE (dice formula) attributes.
         - non-ATTACK verbs are expected to have POWER (to-hit percentage) and
-          STACKS (number of instances to attempt/deliver) attributes.
+          STACKS (dice formulat for instances to attempt/deliver) attributes.
 
     A verb can also be a plus-separated concatenation of simple and/or
     sub-classed verbs.  If a passed verb contains multiple (plus-separated)
@@ -43,12 +43,15 @@ class GameAction(Base):
         - verb="ATTACK.STAB+ATTACK.POISON"
         - ACCURACY=60,40
         - DAMAGE=D6,3D4
+
+    If there are multiple verbs but only a single value, that single value
+    should be used for each verb.
     """
     def __init__(self, source, verb):
         """
         create a new C{GameAction}
         @param source: (GameObject) instrument for the action
-        @param verb: (string) the name of the action
+        @param verb: (string) the name of the action(s)
         """
         super(GameAction, self).__init__(verb)
         self.source = source
@@ -146,6 +149,7 @@ class GameAction(Base):
     def __get_list(self, name, size):
         """
         read specified attribute, lex its (comma-separated) values into a list
+
         @param name: (string) name of attribute to be looked up and split
         @param size: (int) length of desired list
         @return: (list of strings)
@@ -164,8 +168,8 @@ class GameAction(Base):
 
     def __accuracy(self, verb, base, initiator):
         """
-        Compute the accuracy of this attack ... based on the supplied
-        base and any initiator ACCURACY(.subtype) bonus.
+        helper to compute accuracy of this attack, based on the supplied
+        base ACCURACY plus any initiator ACCURACY(.subtype) bonus(es).
 
         @param verb: (string) attack verb
         @param base: (int) accuracy (from the action)
@@ -197,7 +201,9 @@ class GameAction(Base):
 
     def __damage(self, verb, base, initiator):
         """
-        compute the damage resulting from this attack
+        helper to compute the damage of this attack, based on the supplied
+        base DAMAGE plus any initiator DAMAGE(.subtype) bonus(es).
+
         @param verb: (string) attack verb
         @param base: (string) dice formula for base damage
         @param initiator: (GameActor) who is initiating the attack
@@ -231,7 +237,9 @@ class GameAction(Base):
 
     def __power(self, verb, base, initiator):
         """
-        Compute the power with which this condition is being sent
+        helper to compute the power of this action, based on the supplied
+        base POWER plus any initiator POWER.verb/POWER.verb.subtype bonuses
+
         @param verb: (string) action verb
         @param base: (int) base power (from action)
         @param initiator: (GameActor) who is sending the condition
@@ -266,7 +274,9 @@ class GameAction(Base):
 
     def __stacks(self, verb, base, initiator):
         """
-        Compute the number of stacks to be sent
+        helper to compute the stacks of this action, based on the supplied
+        base STACKS plus any initiator STACKS.verb/STACKS.verb.subtype bonuses
+
         @param verb: (string) action verb
         @param base: (string) dice formulat for base stacks
         @param initiator: (GameActor) who is sending the condition
