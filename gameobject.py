@@ -384,6 +384,7 @@ def _lex(line):
     return (name, value)
 
 
+# UNIT TESTING
 def action_test():
     """
     basic test GameObject test cases

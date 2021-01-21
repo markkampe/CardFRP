@@ -150,6 +150,7 @@ class GameActor(GameObject):
         return self.name + " takes no action"
 
 
+# UNIT TESTING
 def simple_attack_tests():
     """
     Base attacks with assured outcomes

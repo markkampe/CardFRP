@@ -127,6 +127,7 @@ class Dice(object):
         return total + self.plus
 
 
+# UNIT TESTING
 def test(formula, min_expected, max_expected, rolls=20):
     """
     test that a formula generates rolls w/expected values
