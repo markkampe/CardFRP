@@ -28,7 +28,7 @@ class GameObject(Base):
 
     def __str__(self):
         """
-        return descriptive string for this GameObject
+        return the given name of this object
         """
         return self.name
 
