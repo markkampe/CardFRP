@@ -4,13 +4,16 @@
 </HEAD>
 <BODY>
 <center>
-<H2>CardFRP - Component Overview</H2>
+<H1>CardFRP - Component Overview<br>
+<strong>(and required functionality for each class)</strong>
+</H1>
 </center>
 <P>
 CardFRP is an underlying (not player-facing) engine that simulates the
 attributes and interactions of characters and objects in locations.
 It is intended to implement mechanics similar to those of FRPGs where
-players act by playing physical cards from a hand of available actions.
+players take actions by playing (physical) cards from a hand of available
+actions.
 </P>
 <P>
 This engine implements:
@@ -29,15 +32,17 @@ This engine implements:
 </ul>
 </P>
 <P>
-These are implemented by a few (Python) classes:
+This functionality is implemented by a few (Python) classes:
 <ul>
     <li><A href="html/gameobject.GameObject-class.html">GameObject</A>,
     	which implements most objects, and serve as the base class for:
 	<ul>
 	    <li>
-	    <A href="html/gameactor.GameActor-class.html">GameActor</A>
+	    <A href="html/gameactor.GameActor-class.html">GameActor</A>,
+	    	which implements PCs and NPCs.
 	    </li>
-	    <li><A href="html/gamecontext.GameContext-class.html">GameContext</A>
+	    <li><A href="html/gamecontext.GameContext-class.html">GameContext</A>,
+	    	which implements locations, containing objects and actors.
 	    </li>
 	</ul>
     </li>
@@ -51,8 +56,7 @@ These are implemented by a few (Python) classes:
 </ul>
 </P>
 
-<H3>Summary of (required) functionality for each class</H3>
-<H4>GameObject</H4>
+<H3>GameObject</H3>
 <P>
 A <A href="html/gameobject.GameObject-class.html">GameObject</A> ...
 <ul>
@@ -64,71 +68,152 @@ It implements methods to:
 <ul>
     <li>return a list of supported <em>GameAction</em>s</li>
     <li>update, search, and return the list of contained <em>GameObject</em>s</li>
-    <li>accept a <em>GameAction</em> and compute and return its consequences</li>
+    <li>accept a (non-<tt>ATTACK</tt>) <em>GameAction</em> and compute and return 
+        its consequences</li>
 </ul>
 </P>
 
 
-<H4>GameAction</H4>
+<H3>GameAction</H3>
 <P>
-A <A <A href="html/gameaction.GameAction-class.html">GameAction</A> is based 
-on a verb (which might be compound or have sub-types).  Examples might be:
+A <A <A href="html/gameaction.GameAction-class.html">GameAction</A> represents
+an interaction between players and/or objects.
+A played <em>GameAction</em> has:
 <ul>
-    <li>SEARCH</LI>
-    <li>MENTAL.INTIMMIDATE</li>
-    <li>ATTACK.STAB+ATTACK.POISON</li>
+   <li> a verb (which might be sub-typed or compound) </li>
+   <li>	an object (or actor) that enables it to be performed </li>
+   <li> an actor who initiates it </li>
+   <li> an actor or object that is to receive it </li>
+   <li> a context (or location) in which the interaction takes place </li>
 </ul>
-A <em>GameObject</em> has attributes that describe the skill and impact with
-which its actions will be executed:
+</p>
+<P>
+It is intended that the interaction functionality in the base <em>GameAction</em>
+and <em>GameActor</em> classes be sufficient to implement most typical gamic
+interactions.  These classes support two basic types of action:
 <ul>
-   <li> skill is described as a percentage ... 
-   	<tt>ACCURACY</tt> for <tt>ATTACK</tt> verbs and 
-	<tt>POWER</tt> for others.</li>
-   <li> impact is described as a dice formula ...
-   	<tt>DAMAGE</tt> for <tt>ATTACK</tt> verbs and
-   	<tt>STACKS</tt> for others.</li>
+   <li> combat (verbs beginning with <tt>ATTACK.</tt>)
+	<ul>
+   	   <li>	Objects (e.g. swords) and initiators (e.g. PCs and NPCs)
+	    	have <tt>ACCURACY</tt> and <tt>DAMAGE</tt> attributes.</li>
+	   <li>	Recipients (e.g. objects, PCs and NPCs) have
+	    	<tt>EVASION</tt> and <tt>PROTECTION</tt> attributes.</li>
+	   <li> If <tt>D100</tt> plus the recipient's <tt>EVASION</tt> is
+	   	greater than the (combined) <tt>ACCURACY</tt> attributes,
+		the attack fails.</li>
+	   <li> If the (combined) <tt>DAMAGE</tt> attribute(s) exceeds
+	   	the recipient's <tt>PROTECTION</tt>,
+		the remaining <tt>DAMAGE</tt> is subtracted from the
+		recipient's <tt>LIFE</tt> attribute.</li>
+	   <li>	If the recipient's <tt>LIFE</tt> goes to (or below)
+	   	zero, his <tt>alive</tt> attribute is set to <tt>False</tt>,
+		and his <tt>incapacitated</tt> attribute is set to <tt>True</tt>.</li>
+	</ul>
+   </li>
+   <li> all other interactions<br>
+	<ul>
+	   <li> Recipients (e.g. objects, PCs, or NPCs) can have 
+	   	arbitrary attributes, that can be affected by 
+		interactions and affect behavior (e.g.  <tt>MENTAL.FEAR</tt>
+		or <tt>VERBAL.FLATTERY</tt>).
+	   	Attribute affecting verbs have the same name as the
+		attribute they affect.</li>
+   	   <li>	Objects (e.g. scrolls) and initiators (e.g. PCs and NPCs)
+	    	have <tt>POWER</tt> and <tt>STACKS</tt> attributes
+		that reflect their ability to initiate such interactions.</li>
+	   <li>	Recipients (e.g. objects, PCs and NPCs) have
+	    	<tt>RESISTANCE</tt> attributes.</li>
+	   <li> If <tt>D100</tt> plus the recipient's <tt>RESISTANCE</tt> is
+	   	greater than the (combined) <tt>POWER</tt> attributes,
+		the action fails.</li>
+	   <li> This test is performed for each of the delivered
+	   	<tt>STACKS</tt>.  For each <tt>STACK</tt> that gets
+		through, the recipient's corresponding attribute
+		is increased by one.
+		</li>
+	</ul>
+   </li>
 </ul>
-The initiator <em>GameActor</em> who performs the action may have additional
-bonuses (in attributes like <tt>DAMAGE</tt> or
-<tt>POWER.MENTAL.INTIMMIDATE</tt>) ... which will be added to the base
-values in the <em>GameAction</em>.
 </P>
 <P>
-When the <em>GameAction</em><tt>.act()</tt> method is called
-(from an initiator, against a target, in a location)
-<ol type="1">
-   <li>The <em>GameAction</em> adds together all of the base and 
-       initiator bonses, and
-       Stores these in <tt>TO_HIT</tt> and <tt>TOTAL</tt> attributes</li>
-   <li>Calls the target's <tt>accept_action()</tt> method</li>
-   <li>Target adds together all of its applicable <tt>RESISTANCE</tt> attributes</li>
-   <li>If the sum of the target's <tt>RESISTANCE</tt>s is greater than or equal to the
-       incoming <tt>TO_HIT</tt>, the action fails.</li>
-   <li>For each incoming unit (of <tt>TOTAL</tt>) the target rolls D100 
-       against the amount by which <tt>TOTAL</tt> exceeded <tt>RESISTANCE</tt>.<br>
-       If the D100 roll is less than that net-power, one unit of action gets through.</li>
-   <li>For the simple actions (supported by this base class), any action that gets
-       through results in an increment (or decrement for <tt>ATTACK</tt>s) of the
-       attribute whose name matches the successful verb.
-       (e.g. if two stacks of <tt>MENTAL.IMTIMMIDATE</tt> get past the recipient's 
-       <tt>RESISTANCE.MENTAL</tt>, the recipient's <tt>INTIMMIDATE</tt> attribute
-       will be incremented by two).
-       </li>
-</ol>
+Characters will have different skill levels for different actions.
+<tt>ACCURACY</tt>, <tt>POWER</tt>, <tt>DAMAGE</tt>, <tt>STACKS</tt>,
+<tt>EVASION</tt>, <tt>RESISTANCE</tt> and <tt>PROTECTION</tt>
+attributes can be sub-typed to reflect these differences:
+<TABLE align="center" border="1">
+<tr><th>Attribute</th> <th>Meaning</th></tr>
+<tr><td>DAMAGE</td>		<td>amount added to all attacks</td></tr>
+<tr><td>DAMAGE.GRAPPLE</td>	<td>amount added to grappling attacks</td></tr>
+<tr><td>ACCURACY.ARROW</td>	<td>accuracy bonus when using bow</td></tr>
+<tr><td>EVASION</td>		<td>ability to evade all attacks</td></tr>
+<tr><td>EVASION.STAB</td>	<td>ability to evade stabbing attacks</td></tr>
+<tr><td>PROTECTION.POISON</td>	<td>ability to resist effects of poison</td></tr>
+<tr><td>POWER.SEARCH</td>	<td>ability to find hidden things</td></tr>
+<tr><td>POWER.MENTAL.FEAR</td>	<td>ability to cause fear</td></tr>
+<tr><td>RESISTANCE.SEARCH</td>	<td>how well hidden something is</td></tr>
+<tr><td>RESISTANCE.MENTAL</td>	<td>resistance to all mental attacks</td></tr>
+<tr><td>RESISTANCE.VERBAL.BRIBE</tt>	<td>specific resistance to bribery attempts</td></tr>
+</TABLE>
+</P>
+<P>
+In addition to action verbs having sub-types, they can also be compounded ...
+so that a single action delivers multiple verbs.  A poisoned dagger might,
+for instance, enable the action <tt>ATTACK.STAB+ATTACK.POISON</tt>.
+When this action is initiated:
+<ul>
+   <li> an <tt>ATTACK.STAB</tt> will be delivered to the recipient.</li>
+   <li> if that is successful (not evaded and not absorbed by armour),
+    	an <tt>ATTACK.POISON</tt> will be delivered to the recpient.</li>
+   <li> the delivery of successive actions ceases with the first failure
+   	(evasion or absorbtion).</li>
+</ul>
 </P>
 
-<H4>GameActor</H4>
+<H3>GameActor</H3>
 <P>
-A <A href="html/gameactor.GameActor-class.html">GameActor</A> is
+<A href="html/gameactor.GameActor-class.html">GameActor</A> is a sub-class of
+<em>GameObject</em>.  In addition to those inherited capabilities and attributes,
+a <em>GameActior</em>
+<ul>
+   <li> has a current context (in which it is located)</li>
+   <li> has a list of supported <tt>VERBAL</tt> interactions,
+   	that it can return as a set of possible
+	<em>GameAction</em>s (to any requesting <em>GameActor</em>)</li>
+   <li> is capable of initiating a <em>GameAction</em> interaction with
+   	designated recpient.</li>
+   <li> is capable of accepting <tt>ATTACK</tt> <em>GameAction</em>s,
+        to process <tt>EVASION</tt>, <tt>PROTECTION</tt> and <tt>DAMAGE</tt>.</li>
+</ul>
 
-<H4>GameContext</H4>
+<H3>GameContext</H3>
 <P>
-
-
-A <A href="html/gamecontext.GameContext-class.html">GameContext</A> is
+A <A href="html/gamecontext.GameContext-class.html">GameContext</A> is another
+sub-class of <em>GameObject</em>.  The interesting characteristics it adds are:
+<ul>
+   <li> it can keep track of PCs and NPCs who are currently in that
+   	<em>GameContext</em> and return lists of them to any requestor.</li>
+   <li>	it supports a list of contained objects (including hidden objects)
+   	and accepts <tt>SEARCH</tt> <em>GameAction</em>s to discover them.</li>
+   <li> like a <em>GameActor</em> it has a list of supported interactions
+   	(e.g. <tt>SEARCH</tt>) that it can return as a set of possible
+	<em>GameAction</em>s (to any requesting <em>GameActor</em>)</li>
+   <li> it can have a <em>parent</em> context.  A room might be within an Inn,
+   	which might be within a village, which might be within a forrest, 
+	which might be within a kingdom.
+	<ul>
+	   <li> any attribute <tt>get()</tt> that it cannot satisfy
+	    	will be passed up the chain of <em>parent</em>s</li>
+	   <li> the list of <tt>possible_actions()</tt> that it returns
+	   	is the union of its, and those of all of its <em>parent</em>s.</li>
+	</ul>
+	</li>
+</ul>
 </P>
-<H3>Sample Specification, Design, and Test Plan submissions</H3>
-<TABLE border="1">
+
+<center>
+<H2>Sample Specification, Design, and Test Plan submissions</H2>
+</center>
+<TABLE border="1" align="center">
 <TR> <TH>Class</TH> <TH>Specification</TH> <TH>Design</TH> <TH>Test Plan</TH> </TR>
 <TR> <TD>GameObject</TD>  
 	<TD><A Href="gameobject-spec.py">sample submission</A></TD>
@@ -162,6 +247,8 @@ Note that <u>all</u> of the
 associated with the (above) class URLs were generated automatically
 (with <a href="http://epydoc.sourceforge.net">Epydoc</a>)
 from the python source code in the (above) sample design submissions.
+The availability of such tools is a strong incentive to learn the
+languages of <em>Doxygen</em> and/or <em>Docstrings</em>.
 </P>
 
 </BODY>
