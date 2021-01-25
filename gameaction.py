@@ -64,7 +64,7 @@ class GameAction(Base):
 
     def __str__(self):
         """
-        return a string representation of our verb and key attributes
+        return a string representation of our verb and its attributes
         """
         if "ATTACK" in self.verb:
             return "{} (ACCURACY={}%, DAMAGE={})".\
@@ -78,13 +78,13 @@ class GameAction(Base):
         Initiate an action against a target
 
         If the verb is a concatenation (list of simple/sub-classed verbs),
-        split it and process each action separately.
+        split it and process each action separately (stopping if one of
+        them fails).
 
-        This (base-class) C{act()} method knows how to process
-        (a list of) simple or sub-typed verbs that are simply a
-        matter of looking up initiator bonus values,
-        adding them up, and calling the target's C{accept_action()}
-        handler, passing:
+        This (base-class) C{act()} method knows how to process (a list of)
+        simple or sub-typed verbs that are simply a matter of looking up
+        initiator bonus values, adding them up, and calling the target's
+        C{accept_action()} handler, passing:
             - the C{GameAction} (with all of its attributes)
             - the initiating C{GameActor}
             - the C{GameContext} in which this is taking place
@@ -116,12 +116,12 @@ class GameAction(Base):
         powers = self.__get_list("POWER", len(verbs))
         stacks = self.__get_list("STACKS", len(verbs))
 
-        # carry out each of the verbs
+        # carry out each of the verbs in the list
         results = ""
         attacks = 0
         conditions = 0
         for verb in verbs:
-            # gather the verb and base/initiator attributes
+            # gather the verb and associated base/initiator attributes
             self.verb = verb
             if "ATTACK" in verb:
                 self.set("TO_HIT", 100 +
@@ -141,6 +141,7 @@ class GameAction(Base):
                 results = result
             else:
                 results += "\n" + result
+            # immediately return false if any action fails
             if not success:
                 return (False, results)
 
@@ -264,7 +265,7 @@ class GameAction(Base):
         if pwr is not None:
             power += int(pwr)
 
-        # add any initiator sub-type accuracy
+        # add any initiator sub-type power
         if sub_type is not None:
             pwr = initiator.get("POWER." + base_type + '.' + sub_type)
             if pwr is not None:
@@ -278,7 +279,7 @@ class GameAction(Base):
         base STACKS plus any initiator STACKS.verb/STACKS.verb.subtype bonuses
 
         @param verb: (string) action verb
-        @param base: (string) dice formulat for base stacks
+        @param base: (string) dice formula for base stacks
         @param initiator: (GameActor) who is sending the condition
         @return: (int) total number of stacks
         """
@@ -297,13 +298,13 @@ class GameAction(Base):
             dice = Dice(base)
             stacks = dice.roll()
 
-        # add the initiator base power
+        # add the initiator base stacks
         stx = initiator.get("STACKS." + base_type)
         if stx is not None:
             dice = Dice(stx)
             stacks += dice.roll()
 
-        # add any initiator sub-type accuracy
+        # add any initiator sub-type stacks
         if sub_type is not None:
             stx = initiator.get("STACKS." + base_type + '.' + sub_type)
             if stx is not None:
@@ -317,14 +318,20 @@ class GameAction(Base):
 class TestRecipient(Base):
     """
     a minimal object that can receive, and report on actions
+
+    The returned result string will include the passed TO_HIT and POWER/STACKS
+    attributes so that the test case can confirm that they were properly
+    computed and passed.
     """
 
     def accept_action(self, action, actor, context):
         """
         report on the action we received
+
         @param action: GameAction being sent
         @param actor: GameActor who set it
         @param context: GameContext in which this happened
+        @return (boolean success, string results)
         """
         if "ATTACK" in action.verb:
             return (True,
@@ -342,8 +349,10 @@ class TestRecipient(Base):
 
 def base_attacks():
     """
-    GameAction test cases:
-        - TO_HIT and DAMAGE computations for base ATTACKs
+    GameAction base ability ATTACK test cases:
+        - test correctness of TO_HIT and DAMAGE computations
+          for base and sub-type attacks
+          but with no sub-type or initiator bonuses
     """
 
     # create a victim and context
@@ -389,8 +398,10 @@ def base_attacks():
 
 def subtype_attacks():
     """
-    GameAction test cases:
-        - TO_HIT and DAMAGE computations for sub-type attacks
+    GameAction sub-type ability ATTACK test cases:
+        - test correctness of TO_HIT and DAMAGE computations
+          for base and sub-type attacks
+          both action and initiator have both base and sub-type bonuses
     """
 
     # create a victim and context
@@ -442,8 +453,10 @@ def subtype_attacks():
 
 def base_conditions():
     """
-    GameAction test cases:
-      - TO_HIT and STACKS computations for base CONDITIONS
+    GameAction base ability condition test cases:
+        - test correctness of TO_HIT and STACKS computations
+          for base and sub-type verbs
+          but with no sub-type or initiator bonuses
     """
 
     # create a victim and context
@@ -488,8 +501,10 @@ def base_conditions():
 
 def subtype_conditions():
     """
-    GameAction test cases:
-      - TO_HIT and TOTAL computations for sub-type attacks
+    GameAction sub-type ability condition test cases:
+        - test correctness of TO_HIT and STACKS computations
+          for base and sub-type verbs
+          both action and initiator have both base and sub-type bonuses
     """
 
     # create a victim and context
@@ -541,9 +556,10 @@ def subtype_conditions():
 
 def compound_verbs():
     """
-    GameAction test cases:
-      - recognition of compound verbs
-        and correct matching of list attributes to each
+    GameAction compound-verb test cases:
+      - recognition and handling of compound verbs
+      - correct association with ACCURACY, DAMAGE, POWER and STACKS lists
+      - stopping list processing on first action that fails
     """
     context = Base("unit-test")
     artifact = Base("test-case")
