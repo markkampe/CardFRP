@@ -600,6 +600,13 @@ def compound_test():
           format(obj.name, action.verb))
 
 
+# TODO test cases for accept_action
+#   resistance (baser, verb, subtype) summation
+#   proper rolls against TO_HIT vs RESISTANCE
+#   correct return of success
+#   correct return of delivered stacks
+#   life cannot be raised above HP
+#
 if __name__ == "__main__":
     action_test()
     weapon_test()
