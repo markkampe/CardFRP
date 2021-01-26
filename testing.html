@@ -23,11 +23,10 @@ The unit testing for the CardFRP component is broken into two parts:
    <li> The more interesting test cases use the combined classes to carry out
    	more complex (and realistic) play scenarios.  These are implemented 
 	in a <em>pytest</em> test suite.
-	<p>
-	Note that these scenario tests are also likely to be interesting as
-	sample code for using the CardFRP component.
 	</li>
 </ul>
+Note that these scenario tests are also likely to be interesting as
+sample code for using the CardFRP component.
 </P>
 
 <H2>Per-Class Unit Testing</H2>
@@ -37,8 +36,6 @@ The unit testing for the CardFRP component is broken into two parts:
 The most interesting code in the <em>GameObject</em> class is the
 <tt>possible_actions()</tt> method, which is the focus of the 
 in-class unit tests.
-The <tt>accept_action()</tt> and <em>hidden object</em> search
-is better tested by play scenarios.
 </p>
 The basic <tt>possible_actions</tt> unit test cases are:
 <ul>
@@ -83,6 +80,11 @@ The basic <tt>possible_actions</tt> unit test cases are:
 	(except for STACKS, in which case the default value is <tt>1</tt>).
 	</li>
 </ul>
+<P>
+The base class <tt>accept_action()</tt> functionality (handling 
+SEARCH actions and other attribute-affecting verbs) is better
+exercised by whole-component play scenarios.
+</P>
 
 <A name="gameaction"/><H3>GameAction Unit Testing</H3>
 <P>
@@ -268,6 +270,25 @@ The obvious formula errors are typos and missing values:
 <A name="gameactor"/><H3>GameActor Unit Testing</H3>
 
 <A name="gamecontext"/><H3>GameContext Unit Testing</H3>
+<P>
+The <em>GameContext</em> implementation is, for the most part, a trivial extension
+of the base <em>GameObject</em> class:
+<ul>
+   <li> the <tt>add_member()</tt> method merely appends a <em>GameActor</em> to the
+   	<tt>party</tt> list, and the <tt>get_party()</tt> methods returns that list.</li>
 
-<A name="integrated"/><H3>Whole Component Testing</H3>
+   <li> the <tt>add_npc()</tt> method merely appends a <em>GameActor</em> to the
+   	<tt>npcs</tt> list, and the <tt>get_npcs()</tt> methods returns that list.</li>
+
+   <li>	The <tt>get()</tt>, <tt>possible_actions()</tt> methods are only
+	interesting in that they pass a request they cannot satisfy up to their parent.</li>
+   <li>	The most interesting method is <tt>accept_action()</tt> which knows how to identify
+	<em>hidden</em> objects and pass a SEARCH action on to them.</li>
+</ul>
+</P>
+<P>
+All of these methods are very simple, and will be well exercised by play scenario tests.
+</P>
+
+<A name="integrated"/><H3>Whole Component Game Scenario Testing</H3>
 </BODY>

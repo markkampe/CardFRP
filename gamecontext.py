@@ -24,10 +24,11 @@ class GameContext(GameObject):
         """
         return the value of an attribute
 
-        @param attribute: name of attribute to be fetched
-        @return: (string) value (or none)
+        Differs from base class because calls flow up the chain of
+        parents if this instance does not have the requested attribute.
 
-        differs from base class because calls follow chain of parents
+        @param attribute: name of attribute to be fetched
+        @return: (string) value (or None)
         """
         if attribute in self.attributes:
             return self.attributes[attribute]
@@ -39,11 +40,13 @@ class GameContext(GameObject):
         """
         return a list of possible actions in this context
 
+        This base class merely passes that list up to our parent.
+
         @param actor: GameActor initiating the action
         @param context: GameContext for this action (should be "self")
         @return: list of possible GameActions
         """
-        # get the list of actions for this context
+        # default: return our parent's list of possible_actions
         actions = super(GameContext, self).possible_actions(actor, context)
         return actions
 
@@ -51,19 +54,24 @@ class GameContext(GameObject):
         """
         receive and process the effects of an action
 
+        The only verb supported by this base class is SEARCH, which it passes
+        on to any hidden (RESISTANCE.SEARCH > 0) object in this context.
+
         @param action: GameAction being performed
         @param actor: GameActor initiating the action
         @param context: GameContext in which the action is happening
+
         @return: (boolean success, string description of the effect)
         """
 
-        # A locale can be searched, turning up concealed things.
         if action.verb == "SEARCH":
             found_stuff = False
             result = ""
+            # look for any object with a RESISTANCE.SEARCH
             for thing in self.objects:
                 concealment = thing.get("RESISTANCE.SEARCH")
                 if concealment is not None and concealment > 0:
+                    # pass the SEARCH action on to that object
                     (success, descr) = thing.accept_action(action, actor,
                                                            context)
                     if success:
@@ -80,29 +88,28 @@ class GameContext(GameObject):
 
     def get_party(self):
         """
-        @return: list of GameActors in the party
+        @return: list of player GameActors in this context
         """
         return self.party
 
     def add_member(self, member):
         """
         Add an player character to this context
-        @param member: player GameActor
+        @param member: (GameActor) player to be added
         """
         if member not in self.party:
             self.party.append(member)
 
     def get_npcs(self):
         """
-        return a list of the NPCs in this context
+        return a list of the NPCs GameActors in this context
         """
         return self.npcs
 
     def add_npc(self, npc):
         """
         Add an NPC to this context
-        @param npc: the NPC GameActor to be added
-        @return: list of (non-party) GameActors in the context
+        @param npc: (GameActor) the NPC to be added
         """
         if npc not in self.npcs:
             self.npcs.append(npc)
