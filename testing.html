@@ -34,190 +34,197 @@ sample code for using the CardFRP component.
 <A name="gameobject"/><H3>GameObject Unit Testing</H3>
 <P>
 The most interesting code in the <em>GameObject</em> class is the
-<tt>possible_actions()</tt> method, which is the focus of the 
-in-class unit tests.
+<tt>possible_actions()</tt> and <tt>accept_action()</tt> methods.
+The test cases to exercise them are combinations of situations to
+exercise different paths through the code ... and so should be
+regarded as <em>white box</em> test cases.
 </p>
-The basic <tt>possible_actions</tt> unit test cases are:
+The <tt>possible_actions()</tt> functionality to be exercised is:
 <ul>
-   <li>	a newly created <em>GameObject</em> supports no actions and
+   <li>	a newly created <em>GameObject</em> returns no actions and
    	has no ACCURACY, DAMAGE, POWER or STACKS attributes</li>
 
-   <li> correct attributes and verb for a single ATTACK -<br>
-   	a <em>GameObject</em> with a single ATTACK, and base ACCURACY
-        and DAMAGE attributes returns a list containing a single 
-	<em>GameAction</em> with those attributes</li>
+   <li> if the ACTIONS attribute is set to one, or a list of multiple
+   	(simple or compound) verbs, <tt>possible_actions()</tt> will
+	return a list containing only (and all of) those verbs</li>
 
-   <li> correct list of verbs from list of ACTIONS -<br>
-   	a <em>GameObject</em> with two possible verbs returns a list
-   	containing exactly those two <em>GameAction</em>s</li>
+   <li> for each ATTACK verb in ACTIONS, it will correctly compute
+   	ACCURACY and DAMAGE by adding the <em>GameObject</em>s
+	base-verb and subtype ACCURACY and DAMAGE attributes</li>
 
-   <li> correct attribute lists for compound actions -<br>
-   	a <em>GameObject</em> with one basic ATTACK and two sub-types
-   	of that ATTACK returns a list containing those three
-	<em>GameAction</em>s, and the ACCURACY and DAMAGE of the
-	sub-type <em>GameAction</em>s include both the base and
-	sub-type ACCURACY and DAMAGE attributes.</li>
+   <li> for each non-ATTACK verb in ACTIONS, it will correctly compute
+   	POWER and STACKS by adding the <em>GameObject</em>s
+	base-verb and subtype POWER and STACKS attributes</li>
 
-   <li>	correct default values for inapplicable or unspecified attributes -<br>
-   	for a <em>GameObject</em> with two compound verbs, both
-   	of which involve a combination of ATTACK and condition
-	verbs, some of which have sub-type ACCURACY and DAMAGE,
-	or POWER and STACKS (in addition to the base ACCURACY,
-	DAMAGE, POWER and STACKS) attributes, 
-	the <em>GameAction</em> ATTACK, DAMAGE, POWER, and STACKS
-	attributes are each a list containing the correct sums
-	of base and sub-type values for the individual elements
-	of the compound verbs.</li>
-
-   <li> for a <em>GameObject</em> with a compound verb, including
-   	both ATTACK and condition actions, each of which has no base
-	attributes, but sub-type ACCURACY, DAMAGE, POWER and STACKS
-	attributes,
-	the <em>GameAction</em> ATTACK, DAMAGE, POWER, and STACKS
-	attributes are each a list containing the correct sub-type
-	attribute values, and the unused slots (because the verb
-	in that position does not have that attribute) is <tt>0</tt>,
-	(except for STACKS, in which case the default value is <tt>1</tt>).
-	</li>
+   <li> for a compound action (multiple verbs separated by +)
+   	the ACCURACY, DAMAGE, POWER and STACKs attributes will
+	each be a list, with the correct number of entries,
+	and the correct values in each slot (in the same order
+	as the verbs)</li>
 </ul>
+
+A set of test cases to exercise this functionality would be:
+<ul>
+
+   <li> create a new <em>GameObject</em>, get its <tt>possible_actions</tt>,
+   	and confirm the emptiness of the list and the absence of any
+	ACCURACY/DAMAGE/POWER/STACKS attributes.</li>
+
+   <li> create a new <em>GameObject</em>, with a single ATTACK verb
+   	and only base-verb ACCURACY and DAMAGE, and confirm that the
+	returned list contains only that verb with those attributes.</li>
+
+   <li> create a new <em>GameObject</em>, with a multiple ACTIONS
+	and confirm that <em>GameActions</em> are returned for each.</li>
+
+   <li> create a new <em>GameObject</em>, with multiple compound
+   	verbs (both ATTACK and non-ATTACK), some of which have
+	sub-type (in addition to base-verb) attributes, 
+	<ul>
+	   <li> confirm that the ACCURACY/DAMAGE/POWER/STACKS attributes are lists
+		that contain the propper values (sums of base and sub-type
+		attributes, in the same order as their corresponding verbs)</li>
+	   <li> confirm the entries for which there should be no values
+	   	(e.g. the third entry in the POWER list when the third verb
+		was an ATTACK) are <tt>0</tt>.</li>
+	</ul> </li>
+</ul>
+
 <P>
-The base class <tt>accept_action()</tt> functionality (handling 
-SEARCH actions and other attribute-affecting verbs) is better
-exercised by whole-component play scenarios.
+The <tt>accept_action()</tt> method in this base class only knows
+how to handle attribute-changing verbs.  The functionality to be
+exercised is:
+<ul>
+   <li>	proper summation of general RESISTANCE, and the verb-appropriate
+   	RESISTANCE.verb, and RESISTANCE.verb.subtype attributes</li>
+
+   <li> proper iteration through the incoming STACKS, and proper 
+   	comparison of TO_HIT and RESISTANCE+D100 to determine whether
+	or not a given STACK of the action is delivered</li>
+
+   <li> proper update of receiver attributes in response to successful
+   	delivery of (both positive and negative) actions </li>
+
+   <li> ensuring that LIFE cannot be raised above HP</li>
+
+   <li> success is returned only if some STACKS are delivered</li>
+
+   <li> returned status correctly reflects complete RESISTANCE or
+   	the number of STACKS successfully delivered</li>
+</ul>
+
+A set of test cases to exercise this functionality would be:
+<ul>
+   <li> pass actions for which there is no RESISTANCE,
+   	and different combinations of base, verb, and sub-type
+	RESISTANCE, and confirm that the correct sum has been
+	computed (for values both above and below TO_HIT)</li>
+
+   <li> pass actions with large numbers of STACKS, and confirm
+	<ul>
+	   <li> that success is true if any STACKS were delivered</li>
+   	   <li>	(by parsing the status) that the number blocked is proprtional to
+		(D100 + RESISTANCE - TO_HIT)/100</li>
+	   <li> that the affected attributes have been
+	   	correctly updates</li>
+	   <li> that it is impossible to raise LIFE above HP</li>
+	</ul></li>
+</ul>
+</P>
+<P>
+The <tt>load()</tt> method will be exercised in the game scenario tests.
 </P>
 
 <A name="gameaction"/><H3>GameAction Unit Testing</H3>
 <P>
-The interesting code is in the <tt>act()</tt> method, where
-we want to ensure that, given a verb, the right base and
-initiator bonuses are used to compute the correct
-<tt>TO_HIT</tt> and <tt>TOTAL</tt> attributes before
-passing the action to the target.  More specifically:
+The interesting code is in the <tt>act()</tt> method, where we
+recognize and split up compound verbs, decide which (object and
+initiator, (base and sub-type) ACCURACY, DAMAGE, POWER and STACKS
+attributes apply to each, compute TO_HIT and TOTAL attributes,
+and pass these to the recipient's <tt>accept_action()</tt> method.
+</P>
+<P>
+The functionality to be exercised is:
 <ul>
-   <li> the correct attributes (ACCURACY vs POWER,
-   	and DAMAGE vs STACKS) are used, depending on the verb</li>
-   <li> the correct base verb values are used </li>
-   <li> correct sub-type values are used </li>
-   <li> the initiator's base and sub-type (ACCURACY, POWER,
-   	DAMAGE, and STACKS) are correctly added to the base values.
-   <li> compound verbs result in the correct sequence of 
-   	GameActions being delivered</li>
-</ul>
-We will do this do this by creating appropriate initiators and
-<em>GameAction</em>s, and using their <tt>act()</tt> method to 
-send them to a test target that returns a result string that
-describes all of the parameters it received.
-</P>
-<P>
-The processing involved in the sub-type and compound verbs for 
-both the base actions and initiator abilities are sufficiently
-complex that these sub-case tests should count as <u>white-box</u> testing.
-</P>
-<P>
-The base-case <tt>ATTACK</tt> and condition delivery tests will simply ensure that 
-the correct base attributes (<tt>ACCURACY</tt> and <tt>DAMAGE</tt>
-or <tt>POWER</tt> and <tt>STACKS</tt>) are used for <em>GameAction</em>s
-with both base-case verbs and sub-typed verbs ... with no initiator bonuses:
-<TABLE border="1">
-    <tr><th>verb</th>
-    	<th>ACCURACY</th>
-	<th>DAMAGE</th>
-	<th>expected TO_HIT</th>
-	<th>expected TOTAL</th>
-    </tr>
-    <tr> <td>"ATTACK"</td>		<td>None</td>	<td>"1"</td>	<td>100</td>	<td>1</td> </tr>
-    <tr> <td>"ATTACK.ten"</td>		<td>10</td>	<td>"10"</td>	<td>110</td>	<td>10</td> </tr>
-    <tr> <td>"ATTACK.twenty"</td>	<td>20</td>	<td>"20"</td>	<td>120</td>	<td>20</td> </tr>
-    <tr> <td>"ATTACK.thirty"</td>	<td>30</td>	<td>"30"</td>	<td>130</td>	<td>30</td> </tr>
-</TABLE>
-</P>
-<P>
-<TABLE border="1">
-    <tr><th>verb</th>
-    	<th>POWER</th>
-	<th>STACKS</th>
-	<th>expected TO_HIT</th>
-	<th>expected TOTAL</th>
-    </tr>
-    <tr> <td>"MENTAL"</td>	<td>None</td>	<td>"1"</td>	<td>100</td>	<td>1</td> </tr>
-    <tr> <td>"MENTAL.X"</td>	<td>10</td>	<td>"10"</td>	<td>110</td>	<td>10</td> </tr>
-    <tr> <td>"MENTAL.Y"</td>	<td>20</td>	<td>"20"</td>	<td>120</td>	<td>20</td> </tr>
-    <tr> <td>"MENTAL.Z"</td>	<td>30</td>	<td>"30"</td>	<td>130</td>	<td>30</td> </tr>
-</TABLE>
-</P>
-<P>
-The sub-type <tt>ATTACK</tt> and condition delivery tests will ensure that the 
-correct (base or sub-type) initiator (<tt>ACCURACY</tt> and <tt>DAMAGE</tt>
-or <tt>POWER</tt> and <tt>STACKS</tt>) attributes are used for <em>GameAction</em>s
-with both base-case verbs and sub-typed verbs.
-</P>
-<P>
-The initiator will have:
-<ul>
-   <li>	ACCURACY=10, DAMAGE="10"</li>
-   <li>	ACCURACY.twenty=20, DAMAGE.twenty="20"</li>
-   <li>	ACCURACY.thirty=30, DAMAGE.thirty="30"</li>
-   <li>	POWER.MENTAL=10, STACKS.MENTAL="10"</li>
-   <li>	POWER.MENTAL.Y=20, STACKS.MENTAL.Y="20"</li>
-   <li>	POWER.MENTAL.Z=30, STACKS.MENTAL.Z="30"</li>
+   <li> breaking compound (separated by +) verbs into distinct
+     	(single-verb) actions, delivered to the recipient,
+	in the correct order</li>
 
+   <li>	correct selection and combination of the action's base,
+   	verb, and sub-type ACCURACY/POWER attributes with any
+	corresponding initiator bonuses to compute the TO_HIT
+	for each delivered action</li>
+
+   <li>	correct selection and combination of the action's base,
+   	verb, and sub-type DAMAGE/STACKS attributes with any
+	corresponding initiator bonuses to compute the TOTAL
+	for each delivered action</li>
+   	
+   <li>	ensuring that those correctly calculated values are
+   	received by the recipient's <tt>accept_action()</tt> method</li>
 </ul>
-We will then initiate the following Game actions and ensure that the correct 
-(base plus sub-type) initiator bonuses have been added to the <tt>TO_HIT</tt> and <tt>TOTAL</tt>
-<TABLE border="1">
-    <tr><th>verb</th>
-    	<th>ACCURACY</th>
-	<th>DAMAGE</th>
-	<th>expected TO_HIT</th>
-	<th>expected TOTAL</th>
-    </tr>
-    <tr> <td>"ATTACK"</td>		<td>None</td>	<td>"1"</td>	<td>110</td>	<td>11</td> </tr>
-    <tr> <td>"ATTACK.ten"</td>		<td>10</td>	<td>"10"</td>	<td>120</td>	<td>20</td> </tr>
-    <tr> <td>"ATTACK.twenty"</td>	<td>20</td>	<td>"20"</td>	<td>150</td>	<td>50</td> </tr>
-    <tr> <td>"ATTACK.thirty"</td>	<td>30</td>	<td>"30"</td>	<td>170</td>	<td>70</td> </tr>
-</TABLE>
 </P>
 <P>
-<TABLE border="1">
-    <tr><th>verb</th>
-    	<th>POWER</th>
-	<th>STACKS</th>
-	<th>expected TO_HIT</th>
-	<th>expected TOTAL</th>
-    </tr>
-    <tr> <td>"MENTAL"</td>	<td>None</td>	<td>"1"</td>	<td>110</td>	<td>11</td> </tr>
-    <tr> <td>"MENTAL.X"</td>	<td>10</td>	<td>"10"</td>	<td>120</td>	<td>20</td> </tr>
-    <tr> <td>"MENTAL.Y"</td>	<td>20</td>	<td>"20"</td>	<td>150</td>	<td>50</td> </tr>
-    <tr> <td>"MENTAL.Z"</td>	<td>30</td>	<td>"30"</td>	<td>170</td>	<td>70</td> </tr>
-</TABLE>
+A set of test cases to exercise this functionality would be:
+<ul>
+   <li> create <em>GameAction</em>s with a simple ATTACK, and
+   	multiple sub-types, each of which has specified
+	(base) ACCURACY and DAMAGE attributes.<br>
+	Confirm that the action delivered to the recipient
+	has the correct verb, TO_HIT and TOTAL attributes.</li>
+
+   <li> create <em>GameAction</em>s with a simple ATTACK, and
+   	multiple sub-types, each of which has specified
+	(base) ACCURACY and DAMAGE attributes.<br>
+	Create an initiator who has base ACCURACY and DAMAGE
+	bonuses, as well as sub-type bonuses for some
+	(but not all) of the verbs.<br>
+	Confirm that the action delivered to the recipient
+	has the correct verb, TO_HIT and TOTAL attributes.</li>
+
+   <li> create <em>GameAction</em>s with a simple MENTAL action,
+   	and multiple sub-types, each of which has specified
+	(base) POWER and STACKS attributes.<br>
+	Confirm that the action delivered to the recipient
+	has the correct verb, TO_HIT and TOTAL attributes.</li>
+
+   <li> create <em>GameAction</em>s with a simple MENTAL action,
+   	and multiple sub-types, each of which has specified
+	(base) POWER and STACKS attributes.<br>
+	Create an initiator who has base POWER and STACKS
+	bonuses, as well as sub-type bonuses for some
+	(but not all) of the verbs.<br>
+	Confirm that the action delivered to the recipient
+	has the correct verb, TO_HIT and TOTAL attributes.</li>
+
+   <li> create a <em>GameAction</em> with a compound action
+   	involving both ATTACK and MENTAL/VERBAL/PHYSICAL verbs,
+	with ACCURACY, DAMAGE, POWER, and STACKS attributes
+	that contain lists of values (corresponding to each
+	of the verbs in the compound action).<br>
+	Call <tt>act()</tt> to deliver those actions, and
+	confirm that each of the test recipient received 
+	each of those verbs with its correct TO_HIT and STACKS
+	attributes.</li>
+
+   <li> create a <em>GameAction</em> with a compound action,
+   	where one of the later actions will fail (POWER=0).
+	Call <tt>act()</tt> to deliver those actions, and
+	confirm that no verbs after the failure were delivered
+	to the recipient.</li>
+</ul>
+
+In support of these tests, we will create a test-recipient, who's
+<tt>accept_action</tt> method simply returns (as status) the verb
+and attribute values.  The test functions can parse this output to
+confirm that the received <em>GameAction</em> had the expected
+verb, TO_HIT and TOTAL attributes.
 </P>
 <P>
-To test compound verbs, we will create an artifact with a compound attack
-(with different <tt>ACCURACY</tt>, <tt>DAMAGE</tt>, <tt>POWER<tt> and <tt>STACKS</tt>
-for each of the individual verbs), invoke that compound action with the
-<em>GameAction</em>.<tt>act()</tt> method, and confirm (with the test target response)
-that each of the individual verbs was delivered separately, in-order, with the
-correct <tt>ACCURACY</tt>, <tt>DAMAGE</tt>, <tt>POWER</tt> and <tt>STACKS</tt>:
-<ul>
-    <li> verb = "ATTACK.one+MENTAL.two+ATTACK.three+PHYSICAL.four+VERBAL.five+FAIL+WONT-HAPPEN"</li>
-    <li> <tt>ACCURACY</tt> = "1,3"</li>
-    <li> <tt>DAMAGE</tt> = "10,30"</li>
-    <li> <tt>POWER</tt> = "2,4,5,0"</li>
-    <li> <tt>STACKS</tt> = "2,4,5,0"</li>
-</ul>
-Expected results:
-<ul>
-    <li> ATTACK.one (TO_HIT=101, DAMAGE=10)</li>
-    <li> MENTAL.two (TO_HIT=102, STACKS=2)</li>
-    <li> ATTACK.three (TO_HIT=103, DAMAGE=30)</li>
-    <li> PHYSICAL.four (TO_HIT=104, STACKS=4)</li>
-    <li> VERBAL.five (TO_HIT=105, STACKS=5)</li>
-    <li> resists FAIL ... because the base and initiator powers were both 0</li>
-</ul>
-A compound verb action stops as soon as one of the sub-verbs fail.
-Since the <tt>FAIL</tt> action will be succesfully resisted,
-the results should include no mention of the <tt>WONT-HAPPEN</tt> action.
-</p>
+The test cases to exercise this are combinations of situations to
+exercise different paths through the code ... and so should be
+regarded as <em>white box</em> test cases.
+</P>
 
 <A name="dice"/><H3>Dice Unit Testing</H3>
 <P>
