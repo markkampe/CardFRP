@@ -8,20 +8,20 @@ from gameaction import GameAction
 class GameObject(Base):
     """
     This is the base class for all artifacts, actors, and contexts.
-    The only abilities of this base class are:
-        - to own objects (which can be added and retrieved)
-        - to return a list of enabled GameActions
-        - to accept GameActions (this is the complex one)
+    The abilities of this base class are:
+        - own a list of objects (which can be added and retrieved)
+        - return a list of GameActions that it enables
+        - accept and process non-ATTACK GameActions
 
-    @ivar objects: list of GameObjects
+    @ivar objects: list of owned/contained GameObjects
 
-    objects can be I{hidden} in which case they might not show up
+    objects can be I{hidden} in which case they might not be returned
     """
     def __init__(self, name="actor", descr=None):
         """
         create a new GameObject
         @param name: display name of this object
-        @param descr: human description of this object
+        @param descr: for players description of this object
         """
         super(GameObject, self).__init__(name, descr)
         self.objects = []
@@ -34,7 +34,7 @@ class GameObject(Base):
 
     def get_objects(self, hidden=False):
         """
-        return a list of GameObjects owned by this GameObject
+        return a list of GameObjects contained in/owned by this GameObject
 
         if an object is hidden (has a positive RESISTANCE.SEARCH) it may not
         be visible unless
@@ -46,15 +46,18 @@ class GameObject(Base):
         """
         reported = []
         for thing in self.objects:
+            # check object's RESISTANCE.SEARCH and SEARCH attributes
             atr = thing.get("RESISTANCE.SEARCH")
             concealed = atr is not None and atr > 0
             atr = thing.get("SEARCH")
             found = atr is not None and atr > 0
 
             if hidden:
+                # if hidden specified, find all hidden objects
                 if concealed and not found:
                     reported.append(thing)
             else:
+                # else find only visible objects
                 if found or not concealed:
                     reported.append(thing)
 
@@ -64,7 +67,7 @@ class GameObject(Base):
         """
         return a named object from my inventory
 
-        @param name: string to match against object name
+        @param name: (string) of the desired object
         @return: first matching object (or None)
         """
         for thing in self.objects:
@@ -74,7 +77,7 @@ class GameObject(Base):
 
     def add_object(self, item):
         """
-        add another object to my inventory (if not already there)
+        add another object to my C{objects} list (if not already there)
         """
         if item not in self.objects:
             self.objects.append(item)
@@ -82,30 +85,22 @@ class GameObject(Base):
     # pylint: disable=too-many-locals
     def accept_action(self, action, actor, context):
         """
-        called by C{GameAction.act()}, to receive a GameAction
-        and determine its effects:
-            1. get the base verb and subtype
-            2. determine our RESISTANCE, RESISTANCE.base, RESISTANCE.subtype
-            3. if our resistance > action.TO_HIT, action fails
-            4. figure out how many (of TOTAL) get through (D100 < POWER)
-            5. add or subtract (for attacks) that to/from affected attribute
-            6. return success (if any got through) and detailed description
-               of what was resisted and what got through.
+        called by C{GameAction.act()} to receive GameAction, determine effects
 
-        This base class is intended to handle any action that simply raises
-        or lowers an attribute
-        (e.g. an ATTACK that reduces LIFE, a spell that increases FEAR or
-        CONFIDENCE, or SEARCH to find hidden objects).
-        Actions with more complex effects must be handled by a sub-class
-        C{accept_action()} that overrides this medhod (at least for the
-        actions in question).
+        NOTE: this base class cannot process ATTACK actions.
+        Those are processed by the C{GameActor} sub-class.
+        This base class can only process actions which (if successful),
+        increment the property who's name matches the action verb.
 
         @param action: GameAction being performed
         @param actor: GameActor initiating the action
-        @param context: GameContext in which action is occuring ...
-            unused by this base class, but likely useful to sub-classes
-            that support more complex actions.
-        @return: (boolean success, string description of the effect)
+        @param context: GameContext in which action is occuring
+
+            NOTE: this base class makes no use of the C{actor} or C{context}
+            parameters, but they might be useful to a subc-class that could
+            process actions before passing them down to us.
+
+        @return: <(boolean) success, (string) description of the effect>
         """
         # get the base verb and sub-type
         if '.' in action.verb:
@@ -115,36 +110,38 @@ class GameObject(Base):
             base_verb = action.verb
             sub_type = None
 
-        # check our base resistance
+        # look up our base resistance
         res = self.get("RESISTANCE")
         resistance = 0 if res is None else int(res)
 
-        # see if we have a base-type resistance
+        # see if we have a RESISTANCE.base-verb
         res = self.get("RESISTANCE." + base_verb)
         if res is not None:
             resistance += int(res)
 
-        # see if we have a sube-type resistance
+        # see if we have a RESISTANCE.base-verb.subtype
         if sub_type is not None:
             res = self.get("RESISTANCE." + base_verb + "." + sub_type)
             if res is not None:
                 resistance += int(res)
 
-        # see if we can resist it entirely
+        # if sum of RESISTANCE >= TO_HIT, action has been resisted
         power = int(action.get("TO_HIT")) - resistance
         if power <= 0:
             return (False, "{} resists {} {}"
                     .format(self.name, action.source.name, action.verb))
 
-        # see how many stacks we can resist
+        # for each STACK instance, roll to see if roll+RESISTANCE > TO_HIT
         incoming = abs(int(action.get("TOTAL")))
         received = 0
         for _ in range(incoming):
             roll = randint(1, 100)
+            # accumulate the number that get through
             if roll <= power:
                 received += 1
 
-        # deliver the updated condition
+        # add number of successful STACKS to affected attribute
+        #   (or if C{GameAction.TOTAL} is negative, subtract)
         sign = 1 if int(action.get("TOTAL")) > 0 else -1
         if received > 0:
             have = self.get(action.verb)
@@ -156,6 +153,7 @@ class GameObject(Base):
                     have = max_hp - received
             self.set(action.verb, have + sign * received)
 
+        # return <whether or not any succeed, accumulated results>
         return (received > 0,
                 "{} resists {}/{} stacks of {} from {} in {}"
                 .format(self.name, incoming - received, incoming,
@@ -168,31 +166,21 @@ class GameObject(Base):
     # pylint: disable=too-many-statements; there are a lot of cases
     def possible_actions(self, actor, context):
         """
-        return list of the actions this object enables
-            - get list of supported (compound) verbs from ACTIONS attribute
-            - for each distinct verb (which may still be compound)
-                - instantiate a GameAction
-                - for each sub-verb
-                -   figure out ACCURACY, DAMAGE, POWER, STACKS
-                -   accumulate a list of these values
-            - set the ACCURACY/DAMAGE/POWER/STACKS list for the GameAction
-            - append the completed GameAction to our list
+        return list of C{GameAction}s this object enables
 
-        our abilities:
-            - base ACCURACY, DAMAGE, POWER, STACKS are in those attributes
-            - attack sub-type bonuses in ACCURACY.subtype and DAMAGE.subtype
-            - non-attack bonuses are in POWER.verb and STACKS.verb
+        verbs come from our (comma-separated-verbs) ACTIONS attribute
+        for each C{GameAction}, ACCURACY, DAMAGE, POWER, STACKS are the sum of
+            - our base ACCURACY, DAMAGE, POWER, STACKS
+            - our ACCURACY.verb, DAMAGE.verb, POWER.verb, STACKS.verb,
 
         @param actor: GameActor initiating the action
         @param context: GameContext in which the action is taken
-        @return: list of possible GameActions
 
-        PROBLEM:
-        Base and sub-type ACCURACY values add, as they should.
-        This is harder to do with DAMAGE because those are not
-        (easily added) values, but dice formulae.  For now,
-        we simply use the sub-type value if present, else the
-        base value.
+        NOTE: this base class makes no use of the C{actor} and C{context}
+        parameters, but a sub-class might want to determine whether or not
+        B{this actor} could perform this action in B{this context}.
+
+        @return: list of possible GameActions
         """
         # get a list of possible actions with this object (e.g. weapon)
         actions = []
@@ -200,7 +188,7 @@ class GameObject(Base):
         if verbs is None:
             return []
 
-        # get our base accuracy/damage/power/stacks
+        # get our base ACCURACY/DAMAGE/POWER/STACKS attributes
         base_accuracy = self.get("ACCURACY")
         base_damage = self.get("DAMAGE")
         base_power = self.get("POWER")
@@ -210,14 +198,16 @@ class GameObject(Base):
         for compound_verb in verbs.split(','):
             action = GameAction(self, compound_verb)
 
-            # verbs may be compound, each sub-verb having sub-type attributes
+            # accumulate base and sub-type attributes
             accuracies = ""
             damages = ""
             powers = ""
             stacks = ""
+
+            # if a verb is compound (+), accumulate each sub-verb separately
             for verb in compound_verb.split('+'):
                 if verb.startswith("ATTACK"):
-                    # see if we have sub-type accuracy/damage
+                    # see if we have ATTACK sub-type ACCURACY/DAMAGE
                     sub_accuracy = None
                     sub_damage = None
                     if verb.startswith('ATTACK.'):
@@ -247,7 +237,7 @@ class GameObject(Base):
                     else:
                         damages += "," + str(damage)
                 else:
-                    # see if we have sub-type power/stacks
+                    # see if we have verb sub-type POWER/STACKS
                     sub_power = self.get("POWER." + verb)
                     power = 0 if base_power is None else int(base_power)
                     power += 0 if sub_power is None else int(sub_power)
@@ -269,7 +259,7 @@ class GameObject(Base):
                     else:
                         stacks += "," + str(stack)
 
-                # add the accumulated attributes to the action
+                # add accumulated ACCURACY/DAMAGE/POWER/STACKS to C{GameAction}
                 if accuracies != "":
                     action.set("ACCURACY", accuracies)
                 if damages != "":
@@ -279,13 +269,14 @@ class GameObject(Base):
                 if stacks != "":
                     action.set("STACKS", stacks)
 
+            # append the new C{GameAction} to the list to be returned
             actions.append(action)
 
         return actions
 
     def load(self, filename):
         """
-        read (potentially nested) object definitions from a file
+        read object definitions from a file
             - blank lines and lines beginning w/# are ignored
             - NAME string ... is the name of an object
             - DESCRIPTION string ... is the description of that object
@@ -293,8 +284,9 @@ class GameObject(Base):
             - OBJECT ... introduces definition of an object in our inventory
             - anything else is an atribute and value (strings should be quoted)
 
-        Object nesting is possible because one object can contain another
-        (e.g. a guard has a sword, a box contains a scroll).
+        NOTE: The object being defined can contain other objects.
+        (e.g. guard has a sword, box contains a scroll)
+        But contained objects cannot, themselves, contain other objects.
 
         @param filename: name of file to be read
         """
@@ -303,12 +295,12 @@ class GameObject(Base):
         try:
             infile = open(filename, "r")
             for line in infile:
-                # see if we can lex it into two white-space separated fields
+                # for each non-comment line, read name and value
                 (name, value) = _lex(line)
                 if name is None:
                     continue
 
-                # check for a few special names
+                # check for special names: NAME, DESCRIPTION, OBJECT
                 if name == "NAME":
                     cur_object.name = value
                 elif name == "DESCRIPTION":
@@ -317,6 +309,7 @@ class GameObject(Base):
                     cur_object = GameObject()
                     self.add_object(cur_object)
                 else:
+                    # anything else is just an attribute of latest object
                     cur_object.set(name, value)
 
             infile.close()
@@ -328,12 +321,11 @@ class GameObject(Base):
 def _lex(line):
     """
     helper function to lex a name and (potentially quoted) value from a line
-        - ignore comments and blank lines ... return (None, None)
         - treat (single or double) quoted strings as a single token
         - if second token is an integer, return it as such, else a string
 
     @param line: string to be lexed
-    @return: (name, value)
+    @return: (name, value) ... or (None, None) for blank/comment lines
     """
     # find the start of the first token
     start = 0
@@ -341,26 +333,25 @@ def _lex(line):
     while start < eol and line[start].isspace():
         start += 1
 
-    # see if this is a comment or blank line
+    # if this is a comment or blank line, return (None, None)
     if start >= eol or line[start] == "#":
         return (None, None)
 
-    # find the end of this token
+    # lex off first (blank separated) token as a name
     end = start + 1
     while end < eol and not line[end].isspace():
         end += 1
     name = line[start:end]
 
-    # find the start of the next token
+    # lex off next token as a value
     start = end
     while start < eol and line[start].isspace():
         start += 1
 
-    # see if there is no next token
     if start >= eol or line[start] == "#":
         return (name, None)
 
-    # does the next token start with a quote
+    # either single or double quotes can surround a value
     if line[start] == '"' or line[start] == "'":
         # scan until the closing quote (or EOL)
         quote = line[start]
@@ -370,12 +361,11 @@ def _lex(line):
             end += 1
         value = line[start:end]
     else:
-        # scan until a terminating blank (or EOL)
         end = start + 1
         while end < eol and not line[end].isspace():
             end += 1
 
-        # if it is an un-quoted number, convert it
+        # an un-quoted number should be returned as an int
         try:
             value = int(line[start:end])
         except ValueError:

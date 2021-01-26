@@ -3,7 +3,86 @@
 <TITLE>Testing</TITLE>
 </HEAD>
 <BODY>
+<center>
+<h1>CardFRP Unit Testing</h1>
+</center>
+
+<H2>Introduction</H2>
+<P>
+The unit testing for the CardFRP component is broken into two parts:
+<ul>
+   <li>	Each basic class will have its own basic unit test suite in the same
+	module as the implementation.  All of these test cases will be automatically
+	run out of the <tt>__main__()</tt> method, and will <tt>assert()</tt> to
+	check the correctness of each test-case.
+	<P>
+	This is done to keep the per-method test cases tightly bundled with the
+	code they exercise, and to make it trivial to re-test a particular module
+	after it is updated.
+	</li>
+   <li> The more interesting test cases use the combined classes to carry out
+   	more complex (and realistic) play scenarios.  These are implemented 
+	in a <em>pytest</em> test suite.
+	<p>
+	Note that these scenario tests are also likely to be interesting as
+	sample code for using the CardFRP component.
+	</li>
+</ul>
+</P>
+
+<H2>Per-Class Unit Testing</H2>
+
 <A name="gameobject"/><H3>GameObject Unit Testing</H3>
+<P>
+The most interesting code in the <em>GameObject</em> class is the
+<tt>possible_actions()</tt> method, which is the focus of the 
+in-class unit tests.
+The <tt>accept_action()</tt> and <em>hidden object</em> search
+is better tested by play scenarios.
+</p>
+The basic <tt>possible_actions</tt> unit test cases are:
+<ul>
+   <li>	a newly created <em>GameObject</em> supports no actions and
+   	has no ACCURACY, DAMAGE, POWER or STACKS attributes</li>
+
+   <li> correct attributes and verb for a single ATTACK -<br>
+   	a <em>GameObject</em> with a single ATTACK, and base ACCURACY
+        and DAMAGE attributes returns a list containing a single 
+	<em>GameAction</em> with those attributes</li>
+
+   <li> correct list of verbs from list of ACTIONS -<br>
+   	a <em>GameObject</em> with two possible verbs returns a list
+   	containing exactly those two <em>GameAction</em>s</li>
+
+   <li> correct attribute lists for compound actions -<br>
+   	a <em>GameObject</em> with one basic ATTACK and two sub-types
+   	of that ATTACK returns a list containing those three
+	<em>GameAction</em>s, and the ACCURACY and DAMAGE of the
+	sub-type <em>GameAction</em>s include both the base and
+	sub-type ACCURACY and DAMAGE attributes.</li>
+
+   <li>	correct default values for inapplicable or unspecified attributes -<br>
+   	for a <em>GameObject</em> with two compound verbs, both
+   	of which involve a combination of ATTACK and condition
+	verbs, some of which have sub-type ACCURACY and DAMAGE,
+	or POWER and STACKS (in addition to the base ACCURACY,
+	DAMAGE, POWER and STACKS) attributes, 
+	the <em>GameAction</em> ATTACK, DAMAGE, POWER, and STACKS
+	attributes are each a list containing the correct sums
+	of base and sub-type values for the individual elements
+	of the compound verbs.</li>
+
+   <li> for a <em>GameObject</em> with a compound verb, including
+   	both ATTACK and condition actions, each of which has no base
+	attributes, but sub-type ACCURACY, DAMAGE, POWER and STACKS
+	attributes,
+	the <em>GameAction</em> ATTACK, DAMAGE, POWER, and STACKS
+	attributes are each a list containing the correct sub-type
+	attribute values, and the unused slots (because the verb
+	in that position does not have that attribute) is <tt>0</tt>,
+	(except for STACKS, in which case the default value is <tt>1</tt>).
+	</li>
+</ul>
 
 <A name="gameaction"/><H3>GameAction Unit Testing</H3>
 <P>
@@ -14,26 +93,29 @@ initiator bonuses are used to compute the correct
 passing the action to the target.  More specifically:
 <ul>
    <li> the correct attributes (ACCURACY vs POWER,
-   	and POWER vs STACKS) are used, depending on the verb</li>
+   	and DAMAGE vs STACKS) are used, depending on the verb</li>
    <li> the correct base verb values are used </li>
    <li> correct sub-type values are used </li>
+   <li> the initiator's base and sub-type (ACCURACY, POWER,
+   	DAMAGE, and STACKS) are correctly added to the base values.
    <li> compound verbs result in the correct sequence of 
    	GameActions being delivered</li>
 </ul>
-We will do this do this by creating appriate <em>GameAction</em>s
-and using their <tt>act()</tt> method to send them to a
-test target that returns a result string that describes
-all of the parameters it receives.
+We will do this do this by creating appropriate initiators and
+<em>GameAction</em>s, and using their <tt>act()</tt> method to 
+send them to a test target that returns a result string that
+describes all of the parameters it received.
 </P>
 <P>
-The processing involved in the sub-type and compound verb tests is sufficiently
-complex that these should count as <u>white-box</u> test cases.
+The processing involved in the sub-type and compound verbs for 
+both the base actions and initiator abilities are sufficiently
+complex that these sub-case tests should count as <u>white-box</u> testing.
 </P>
 <P>
 The base-case <tt>ATTACK</tt> and condition delivery tests will simply ensure that 
 the correct base attributes (<tt>ACCURACY</tt> and <tt>DAMAGE</tt>
 or <tt>POWER</tt> and <tt>STACKS</tt>) are used for <em>GameAction</em>s
-with both base-case verbs and sub-typed verbs:
+with both base-case verbs and sub-typed verbs ... with no initiator bonuses:
 <TABLE border="1">
     <tr><th>verb</th>
     	<th>ACCURACY</th>
@@ -110,7 +192,7 @@ We will then initiate the following Game actions and ensure that the correct
 <P>
 To test compound verbs, we will create an artifact with a compound attack
 (with different <tt>ACCURACY</tt>, <tt>DAMAGE</tt>, <tt>POWER<tt> and <tt>STACKS</tt>
-for each of the individual verbs), send that compound action to the
+for each of the individual verbs), invoke that compound action with the
 <em>GameAction</em>.<tt>act()</tt> method, and confirm (with the test target response)
 that each of the individual verbs was delivered separately, in-order, with the
 correct <tt>ACCURACY</tt>, <tt>DAMAGE</tt>, <tt>POWER</tt> and <tt>STACKS</tt>:
@@ -156,7 +238,7 @@ within the expected range.  I will write a routine:
 	 int max_expected,	# highest legal return value
 	 int num_rolls)		# number of rolls to test
 </pre>
-that will do this, and use it to test
+that will do this, and use it to test each of the basic types of roll formula:
 <TABLE border="1">
     <tr><th align=center>formula</th>
     	<th align=center>min expected</th>
