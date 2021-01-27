@@ -99,8 +99,8 @@ interactions.  These classes support two basic types of action:
 	   <li>	Recipients (e.g. objects, PCs and NPCs) have
 	    	<tt>EVASION</tt> and <tt>PROTECTION</tt> attributes.</li>
 	   <li> If <tt>D100</tt> plus the recipient's <tt>EVASION</tt> is
-	   	greater than the (combined) <tt>ACCURACY</tt> attributes,
-		the attack fails.</li>
+	   	greater than <tt>D100</tt> plus the (combined) <tt>ACCURACY</tt>
+        attributes, the attack fails.</li>
 	   <li> If the (combined) <tt>DAMAGE</tt> attribute(s) exceeds
 	   	the recipient's <tt>PROTECTION</tt>,
 		the remaining <tt>DAMAGE</tt> is subtracted from the
@@ -124,8 +124,8 @@ interactions.  These classes support two basic types of action:
 	   <li>	Recipients (e.g. objects, PCs and NPCs) have
 	    	<tt>RESISTANCE</tt> attributes.</li>
 	   <li> If <tt>D100</tt> plus the recipient's <tt>RESISTANCE</tt> is
-	   	greater than the (combined) <tt>POWER</tt> attributes,
-		the action fails.</li>
+	   	greater than <tt>D100</tt> plus the (combined) <tt>POWER</tt> 
+        attributes, the action fails.</li>
 	   <li> This test is performed for each of the delivered
 	   	<tt>STACKS</tt>.  For each <tt>STACK</tt> that gets
 		through, the recipient's corresponding attribute
@@ -176,13 +176,15 @@ When this action is initiated:
 a <em>GameActior</em>
 <ul>
    <li> has a current context (in which it is located)</li>
-   <li> has a list of supported <tt>VERBAL</tt> interactions,
-   	that it can return as a set of possible
-	<em>GameAction</em>s (to any requesting <em>GameActor</em>)</li>
-   <li> is capable of initiating a <em>GameAction</em> interaction with
+   <li> has a list of supported <tt>VERBAL</tt> interaction verbs,
+   	    that can be turned into <em>GameAction</em>s
+        and used by a requesting <em>GameActor</em></li>
+   <li> is capable of initiating any available <em>GameAction</em> with
    	designated recpient.</li>
    <li> is capable of accepting <tt>ATTACK</tt> <em>GameAction</em>s,
-        to process <tt>EVASION</tt>, <tt>PROTECTION</tt> and <tt>DAMAGE</tt>.</li>
+        to process <tt>EVASION</tt>, <tt>PROTECTION</tt> and <tt>DAMAGE</tt>.
+        Non-ATTACK (attribute affecting) <em>GameAction</em>s are processed
+        by its (<em>GameObject</em>) super-class. </li>
 </ul>
 
 <H3>GameContext</H3>
