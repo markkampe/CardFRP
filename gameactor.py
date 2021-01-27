@@ -13,66 +13,54 @@ class GameActor(GameObject):
 
     def __init__(self, name="actor", descr=None):
         """
-        create a new GameObject
-        @param name: display name of this object
-        @param descr: human description of this object
+        create a new GameActor
+        @param name: display name of this actor
+        @param descr: human description of this actor
         """
         super(GameActor, self).__init__(name, descr)
         self.context = None
         self.alive = True
         self.incapacitated = False
 
-    def accept_attack(self, action, actor, context):
+    def _accept_attack(self, action, actor, context):
         """
         Accept an attack, figure out if it hits, and how bad
-        @param action: GameAction being performed
-        @param actor: GameActor initiating the action
-        @param context: GameContext in which action is being taken
+        @param action: (GameAction) being performed
+        @param actor: (GameActor) initiating the action
+        @param context: (GameContext) in which action is being taken
         @return:  (boolean, string) succewss and description of the effect
 
         """
-        # A standard attack comes with at-least two standard attributes:
-        #    TO_HIT ... the (pre defense) to-hit probability
-        #    HIT_POINTS ... the (pre-armor) damage being delivered
-        #
-        # The target will apply evasion to determine if it is hit,
-        # protection to see how much damage gets through, and then
-        # update its life points.
 
-        # get the victim's base evasion
+        # get the victim's base and sub-type EVASION
         evade = self.get("EVASION")
         evasion = 0 if evade is None else int(evade)
-
-        # add in any sub-type evasion
         if "ATTACK." in action.verb:
             evade = self.get("EVASION." + action.verb.split(".")[1])
             if evade is not None:
                 evasion += int(evade)
 
-        # see if TO_HIT can beat the evasion
+        # see if EVASION+D100 can beat the incoming TO_HIT
         to_hit = action.get("TO_HIT") - evasion
         if to_hit < 100 and randint(1, 100) > to_hit:
             return (False, "{} evades {} {}"
                     .format(self.name, action.source.name, action.verb))
 
-        # get the victim's base protection
+        # get the recipient's base and sub-class PROTECTION
         prot = self.get("PROTECTION")
         protection = 0 if prot is None else int(prot)
-
-        # add in any sub-type protection
         if "ATTACK." in action.verb:
             prot = self.get("PROTECTION." + action.verb.split(".")[1])
             if prot is not None:
                 protection += int(prot)
 
-        # see how much of the delivered damage we actually take
+        # see if PROTECTION can absorb all the incoming HIT_POINTS
         delivered = action.get("HIT_POINTS")
-
         if protection >= delivered:
             return (False, "{}'s protection absorbs all damage from {}"
                     .format(self.name, action.verb))
 
-        # take the damage and see if we survive
+        # subtract received HIT_POINTS from our LIFE
         old_hp = self.get("LIFE")
         if old_hp is None:
             old_hp = 0
@@ -85,6 +73,8 @@ class GameActor(GameObject):
                          delivered, protection, context.name) \
                  + "\n    {} life: {} - {} = {}" \
                  .format(self.name, old_hp, delivered - protection, new_hp)
+
+        # if LIFE<=0 we are incapacitated, and no longer alive
         if new_hp <= 0:
             result += ", and is killed"
             self.alive = False
@@ -93,30 +83,49 @@ class GameActor(GameObject):
 
     def accept_action(self, action, actor, context):
         """
-        receive and process the effects of an action
+        receive and process the effects of an ATTACK
+        (other actions are passed to our super-class)
 
-        @param action: GameAction being performed
-        @param actor: GameActor initiating the action
-        @param context: GameContext in which action is being taken
+        A standard attack comes with at-least two standard attributes:
+           - TO_HIT ... the (pre defense) to-hit probability
+           - HIT_POINTS ... the (pre-armor) damage being delivered
+
+           1. use D100+EVASION to determine if attack hits
+           2. use PROTECTION to see how much damage gets through
+           3. update LIFE_POINTS
+
+        @param action: (GameAction) being performed
+        @param actor: (GameActor) initiating the action
+        @param context: (GameContext) in which action is being taken
         @return:  (boolean, string) description of the effect
         """
         # get the base action verb
         base_verb = action.verb.split('.')[0] \
             if '.' in action.verb else action.verb
 
-        # attacks are based on HIT/EVADE and DAMAGE/PROTECTION
+        # we handle ATTACK (based on HIT/DAMAGE vs EVASION/PROTECTION)
         if base_verb == "ATTACK":
-            return self.accept_attack(action, actor, context)
+            return self._accept_attack(action, actor, context)
 
-        # see if our super class knows what to do with it
+        # otherwise let our (GameObject) super-class handle it
         return super(GameActor, self).accept_action(action, actor, context)
 
-    # pylint: disable=unused-argument; I expect actor to be used later
     def interact(self, actor):
         """
-        enable interactions with this NPC
-        @param actor: GameActor initiating the interactions
+        return a list of possible interactions (w/this GameActor)
+
+        @param actor: (GameActor) initiating the interactions
         @return: Interaction object
+
+        GameObjects have a (ACTIONS) list of verbs that can be turned into
+        a list of the GameActions that they enable.
+        GameActors have a (INTERACTIONS) list of verbs that a requesting
+        GameActor can turn into interaction GameActions that can be
+        exchanged with that character.
+
+        The interaction object will have an ACTIONS attribute,
+        containing a comma-separated list of the supported interaction verbs
+        (which can be used to instantiate and deliver GameActions).
         """
         interactions = GameObject("interactions w/" + actor.name)
         verbs = self.get("INTERACTIONS")
@@ -137,15 +146,17 @@ class GameActor(GameObject):
     def take_action(self, action, target):
         """
         Initiate an action against a target
-        @param action: GameAction to be initiated
-        @param target: GameObject target of the action
+        @param action: (GameAction) to be initiated
+        @param target: (GameObject) target of the action
         @return: (boolean, string) result of the action
         """
+        # call C{action.act()} with me as initiator, in my context
         return action.act(self, target, self.context)
 
     def take_turn(self):
         """
         called once per round in initiative order
+        (must be implemented in sub-classes)
         """
         return self.name + " takes no action"
 
