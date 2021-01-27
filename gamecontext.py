@@ -125,8 +125,7 @@ class GameContext(GameObject):
     def remove_npc(self, npc):
         """
         Remove a non-player character from this context
-        @param member: (GameActor) NPC to be removed
+        @param npc: (GameActor) NPC to be removed
         """
-        if member in self.npcs:
+        if npc in self.npcs:
             self.npcs.remove(npc)
-
