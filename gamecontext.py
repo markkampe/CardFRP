@@ -100,6 +100,14 @@ class GameContext(GameObject):
         if member not in self.party:
             self.party.append(member)
 
+    def remove_member(self, member):
+        """
+        Remove a player character from this context
+        @param member: (GameActor) player to be removed
+        """
+        if member in self.party:
+            self.party.remove(member)
+
     def get_npcs(self):
         """
         return a list of the NPCs GameActors in this context
@@ -113,3 +121,12 @@ class GameContext(GameObject):
         """
         if npc not in self.npcs:
             self.npcs.append(npc)
+
+    def remove_npc(self, npc):
+        """
+        Remove a non-player character from this context
+        @param member: (GameActor) NPC to be removed
+        """
+        if member in self.npcs:
+            self.npcs.remove(npc)
+
