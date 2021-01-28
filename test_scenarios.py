@@ -158,6 +158,7 @@ def test_search(context, actor):
     (CONTEXT_DESCR, HERO_DESCR, GUARD_DESCR, 'VERBAL.FLATTER', True),
     (CONTEXT_DESCR, HERO_DESCR, GUARD_DESCR, 'VERBAL.OUTRANK', False),
     ])
+# pylint: disable=too-many-locals
 def test_interaction(context, actor, target, verb, expect):
     """
     @param context: (string) context description file name
@@ -189,13 +190,34 @@ def test_interaction(context, actor, target, verb, expect):
     assert found is not None, \
         "Unable to find interaction " + verb + " in " + target
 
+    # get the property to be affected
+    pre = guard.get(verb)
+
     # perform that interaction
     if expect:
         found.set("STACKS", 10)      # lay it on thick
     (result, _) = hero.take_action(found, guard)
-    assert result == expect, \
-        verb + " on " + guard.name + " " + \
-        "failed" if expect else "succeeded"
+
+    # get the affected property after the fact
+    post = guard.get(verb)
+
+    # did it succeed/fail as expected, and result in expected attribute change
+    if expect:
+        assert result, \
+            verb + " on " + guard.name + " " + "failed"
+        if pre:
+            assert post > pre, \
+                "successful " + verb + " vs " + guard.name + \
+                " did not increase " + verb
+        else:
+            assert post >= 1, \
+                "successful " + verb + " vs " + guard.name + \
+                " did not result in positive " + verb
+    else:
+        assert not result, \
+            verb + " on " + guard.name + " " + "failed"
+        assert post == pre, \
+            "failed " + verb + " vs " + guard.name + " changed " + verb
 
 
 # pylint: disable=too-many-branches
@@ -254,10 +276,10 @@ def main():
                       local.name))
 
     stuff = local.get_objects(hidden=True)
-    if stuff:
+    if not stuff:
         print("after which ... no hidden objects remain")
     else:
-        print("\n    undiscovered objects:")
+        print("\nafter which ... undiscovered objects:")
         for thing in stuff:
             print("\t{} ... {}".format(thing.name, thing.description))
     print()
