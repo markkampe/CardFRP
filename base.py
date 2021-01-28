@@ -50,6 +50,7 @@ class Base(object):
         self.attributes[attribute] = value
 
 
+# UNIT TESTING
 def main():
     """
     basic test cases for name, description, and attributes
