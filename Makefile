@@ -23,7 +23,7 @@ all:
 	python3 gameactor.py
 	@echo
 	@echo Full scenario
-	python3 test.py
+	python3 test_scenarios.py
 
 doc:
 	epydoc -v --graph=umlclasstree $(ALL)
