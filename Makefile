@@ -1,12 +1,12 @@
 BASE_CLASSES = base.py gameobject.py gameactor.py gameaction.py gamecontext.py dice.py
 SUB_CLASSES = npc_guard.py
-PROGRAMS = scenarios.py
+DEMO = scenarios.py
 PYTESTS = test_cardfrp.py
 
-ALL = $(BASE_CLASSES) $(SUB_CLASSES) $(PROGRAMS) $(PYTESTS)
+ALL = $(BASE_CLASSES) $(SUB_CLASSES) $(DEMO) $(PYTESTS)
 
-demo: $(PROGRAMS)
-	python3 $(PROGRAMS)
+demo: $(DEMO)
+	python3 $(DEMO)
 
 test:
 	for file in $(BASE_CLASSES) $(SUB_CLASSES); do	\
@@ -15,6 +15,9 @@ test:
 		echo "=========================";	\
 		python3 $$file;				\
 		done
+	echo "\n\n=========================";	\
+	echo "RUNNING MULTI-CLASS PyTests";	\
+	echo "=========================";	\
 	pytest-3 -v
 
 doc:
