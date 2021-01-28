@@ -1,10 +1,10 @@
 BASE_CLASSES = base.py gameobject.py gameactor.py gameaction.py gamecontext.py dice.py
 SUB_CLASSES = npc_guard.py
-PROGRAMS = test.py
+PROGRAMS = test_scenarios.py
 ALL = $(BASE_CLASSES) $(SUB_CLASSES) $(PROGRAMS)
 
 test:
-	python3 test.py
+	python3 test_scenarios.py
 
 all:
 	@echo Dice:
