@@ -1,32 +1,24 @@
 BASE_CLASSES = base.py gameobject.py gameactor.py gameaction.py gamecontext.py dice.py
 SUB_CLASSES = npc_guard.py
-PROGRAMS = test_scenarios.py
-ALL = $(BASE_CLASSES) $(SUB_CLASSES) $(PROGRAMS)
+PROGRAMS = scenarios.py
+PYTESTS = test_cardfrp.py
+
+ALL = $(BASE_CLASSES) $(SUB_CLASSES) $(PROGRAMS) $(PYTESTS)
+
+demo: $(PROGRAMS)
+	python3 $(PROGRAMS)
 
 test:
-	python3 test_scenarios.py
-
-all:
-	@echo Dice:
-	python3 dice.py
-	@echo
-	@echo Base:
-	python3 base.py
-	@echo
-	@echo GameObject:
-	python3 gameobject.py
-	@echo
-	@echo GameAction:
-	python3 gameaction.py
-	@echo
-	@echo GameActor:
-	python3 gameactor.py
-	@echo
-	@echo Full scenario
-	python3 test_scenarios.py
+	for file in $(BASE_CLASSES) $(SUB_CLASSES); do	\
+		echo "\n\n=========================";	\
+		echo "TESTING $$file";			\
+		echo "=========================";	\
+		python3 $$file;				\
+		done
+	pytest-3 -v
 
 doc:
-	epydoc -v --graph=umlclasstree $(ALL)
+	epydoc -v --graph=umlclasstree $(BASE_CLASSES) $(SUB_CLASSES)
 	@echo PyDocumentation can be found in html subdirectory
 
 DISABLES= --disable=duplicate-code --disable=fixme
