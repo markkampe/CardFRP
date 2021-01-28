@@ -395,4 +395,37 @@ of the base <em>GameObject</em> class, and is easily exercised with a few
 </P>
 
 <A name="integrated"/><H3>Whole Component Game Scenario Testing</H3>
+<P>
+Some of the obvious unit test cases involve the interactions of multiple
+classes, and so I have chosen to put these into the (pytest) test_scenarios
+module.  These include:
+<ul>
+   <li>	loading a simple <em>GameActor</em> description and confirming
+   	the correct setting of name, description, and a few attributes</li>
+
+   <li> loading a complex <em>GameActor</em> description (that includes
+   	numerous actions and objects), and confirm that they were all
+	correctly instantiated</li>
+
+   <li>	loading a <em>GameContext</em> description that includes both
+        visible and hidden objects, and confirm their presence, and 
+	that (sufficient) SEARCH operations will discover the hidden
+	objects</li>
+
+   <li> having one <em>GameActor</em> obtain a list of possible
+   	<em>interaction</em>s from another, and exercise them,
+	confirming that those with sufficient POWER or STACKS
+	succeed</li>
+</ul>
+</P>
+<P>
+In addition to these "does it work" test cases, the scenario tests
+will also include demonstrations of fully integrated functionality:
+<ul>
+   <li> all possible actions performed against the local context</li>
+   <li>	all possible non-COMBAT actions performed against an NPC</li>
+   <li> combat (to the death) with a group of NPCs</li>
+   <li> compound attack weapon use (e.g. a poisoned dagger)</li>
+   <li> the use and efficacy of scrolls (cure Light Wounds, and Courage)</li>
+</ul>
 </BODY>
