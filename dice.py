@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 """
 This module provides the Dice class (formula based random numbers)
 """

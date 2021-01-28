@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 """ This module implements the (foundation) GameObject Class """
 import sys
 from random import randint

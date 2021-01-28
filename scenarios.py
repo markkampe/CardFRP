@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 """
 This module contains sample code that runs through exploring a context,
 verbal interactions, physical interactions, combat, and use of spells and

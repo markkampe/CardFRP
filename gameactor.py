@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 """ This module implements the GameActor class """
 from random import randint
 from gameobject import GameObject

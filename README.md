@@ -58,7 +58,7 @@ This repo contains that prototype.
    *TEST_hero.dat*, *TEST_guard.dat*, and *TEST_context.dat*.
 
 **Makefile targets:**
-   - *default*: run the basic *test.py* program
-   - *all*: run all of the unit-test cases as well as *test.py*
+   - *default*: run the demo scenarios
+   - *test*: run all of the unit-test cases as well as *test.py*
    - *doc*: use *epydoc* to generate a class diagram and API documentation.
    - *lint*: use *pylint* and *pep8* to check the code for standards compliance

@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 """ This module implements the GameAction class """
 from dice import Dice
 from base import Base

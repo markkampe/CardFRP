@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 # pylint: disable=invalid-name; "Npc_guard" would be an abomination
 """ This module implements the NPC_guard class """
 from random import randint

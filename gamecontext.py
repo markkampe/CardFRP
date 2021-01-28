@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 """ This module implements the GameContext class """
 from gameobject import GameObject
 
