@@ -22,11 +22,12 @@ The unit testing for the CardFRP component is broken into two parts:
 	</li>
    <li> The more interesting test cases use the combined classes to carry out
    	more complex (and realistic) play scenarios.  These are implemented 
-	in a <em>pytest</em> test suite.
+	by a <em>pytest</em> test suite.
 	</li>
 </ul>
-Note that these scenario tests are also likely to be interesting as
-sample code for using the CardFRP component.
+In addition to the above pass/fail test cases, we will also provide sample
+code to exercise a wide range of common game scenarios (e.g. searches,
+interactions, combat, scrolls).
 </P>
 
 <H2>Per-Class Unit Testing</H2>
@@ -123,7 +124,7 @@ A set of test cases to exercise this functionality would be:
    <li> pass actions with large numbers of STACKS, and confirm
 	<ul>
 	   <li> that success is true if any STACKS were delivered</li>
-   	   <li>	(by parsing the status) that the number blocked is proprtional to
+   	   <li>	(by parsing the status) that the number blocked is proportional to
 		(D100 + RESISTANCE - TO_HIT)/100</li>
 	   <li> that the affected attributes have been
 	   	correctly updates</li>
@@ -394,38 +395,41 @@ of the base <em>GameObject</em> class, and is easily exercised with a few
 </ul>
 </P>
 
-<A name="integrated"/><H3>Whole Component Game Scenario Testing</H3>
+<A name="integrated"/><H3>Whole Component Test Cases</H3>
 <P>
 Some of the obvious unit test cases involve the interactions of multiple
-classes, and so I have chosen to put these into the (pytest) test_scenarios
-module.  These include:
+classes, and so I have chosen to put these into the (<em>PyTest</em>)
+<tt>test_cardfrp.py</tt> module.  These include:
 <ul>
-   <li>	loading a simple <em>GameActor</em> description and confirming
-   	the correct setting of name, description, and a few attributes</li>
+   <li>	loading a simple <em>GameActor</em> description from a file
+   	and confirming the correct setting of name, description,
+	and a few attributes</li>
 
    <li> loading a complex <em>GameActor</em> description (that includes
-   	numerous actions and objects), and confirm that they were all
-	correctly instantiated</li>
+   	enabled actions and posessed objects) from a file, and confirm
+	that they were all correctly instantiated</li>
 
    <li>	loading a <em>GameContext</em> description that includes both
-        visible and hidden objects, and confirm their presence, and 
-	that (sufficient) SEARCH operations will discover the hidden
+        visible and hidden objects from a file, and confirm their presence,
+	and that (sufficient) SEARCH operations will discover the hidden
 	objects</li>
 
    <li> having one <em>GameActor</em> obtain a list of possible
    	<em>interaction</em>s from another, and exercise them,
 	confirming that those with sufficient POWER or STACKS
-	succeed</li>
+	succeed and have the intended effects</li>
 </ul>
 </P>
 <P>
-In addition to these "does it work" test cases, the scenario tests
-will also include demonstrations of fully integrated functionality:
+In addition to these "does it work" test cases, there is a
+<tt>scenarios.py</tt> that provides demonstrations of fully
+integrated functionality:
 <ul>
-   <li> all possible actions performed against the local context</li>
-   <li>	all possible non-COMBAT actions performed against an NPC</li>
+   <li> all possible actions performed in the local context</li>
+   <li>	all possible non-COMBAT actions performed with an NPC</li>
    <li> combat (to the death) with a group of NPCs</li>
    <li> compound attack weapon use (e.g. a poisoned dagger)</li>
-   <li> the use and efficacy of scrolls (cure Light Wounds, and Courage)</li>
+   <li> the use and efficacy of magical artifacts (e.g. scrolls
+    	and potions): cure Light Wounds, and Courage</li>
 </ul>
 </BODY>
