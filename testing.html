@@ -9,20 +9,22 @@
 
 <H2>Introduction</H2>
 <P>
-The unit testing for the CardFRP component is broken into two parts:
+The unit testing for the CardFRP component is intended to exercise all 
+non-trivial methods in the basic CardFRP classes
+(<em>GameObject, GameActor, GameContext, GameAction</em>, and <em>Dice</em>).
+This testing will be broken into two parts:
 <ul>
    <li>	Each basic class will have its own basic unit test suite in the same
 	module as the implementation.  All of these test cases will be automatically
 	run out of the <tt>__main__()</tt> method, and will <tt>assert()</tt> to
 	check the correctness of each test-case.
-	<P>
-	This is done to keep the per-method test cases tightly bundled with the
-	code they exercise, and to make it trivial to re-test a particular module
-	after it is updated.
+	This is a stardard model for technique for Python class unit-testing, and
+	has the advantage of keeping the per-method test cases tightly bundled with
+	the code they exercise (and ensuring that they always match).
 	</li>
-   <li> The more interesting test cases use the combined classes to carry out
-   	more complex (and realistic) play scenarios.  These are implemented 
-	by a <em>pytest</em> test suite.
+   <li> More interesting test cases involve operations that combine the
+   	capabilities of multiple classes.  These will be implemented by a
+	<em>PyTest</em> test suite.
 	</li>
 </ul>
 In addition to the above pass/fail test cases, we will also provide sample
@@ -45,7 +47,7 @@ The <tt>possible_actions()</tt> functionality to be exercised is:
    <li>	a newly created <em>GameObject</em> returns no actions and
    	has no ACCURACY, DAMAGE, POWER or STACKS attributes</li>
 
-   <li> if the ACTIONS attribute is set to one, or a list of multiple
+   <li> if the ACTIONS attribute is a single, or a list of multiple
    	(simple or compound) verbs, <tt>possible_actions()</tt> will
 	return a list containing only (and all of) those verbs</li>
 
@@ -72,18 +74,24 @@ A set of test cases to exercise this functionality would be:
 	ACCURACY/DAMAGE/POWER/STACKS attributes.</li>
 
    <li> create a new <em>GameObject</em>, with a single ATTACK verb
-   	and only base-verb ACCURACY and DAMAGE, and confirm that the
-	returned list contains only that verb with those attributes.</li>
+   	and only base-verb ACCURACY and DAMAGE, 
+   	call <tt>possible_actions()</tt>, and confirm that the
+	returned list of <em>GameAction</em>s contains only that verb
+	with those attributes.</li>
 
-   <li> create a new <em>GameObject</em>, with a multiple ACTIONS
-	and confirm that <em>GameActions</em> are returned for each.</li>
+   <li> create a new <em>GameObject</em>, with a multiple ACTIONS,
+   	call <tt>possible_actions()</tt>,
+	and confirm that correct (verb and attributes) <em>GameActions</em>
+	are returned for each.</li>
 
    <li> create a new <em>GameObject</em>, with multiple compound
    	verbs (both ATTACK and non-ATTACK), some of which have
 	sub-type (in addition to base-verb) attributes, 
+	call <tt>possible_actions()</tt> and
 	<ul>
-	   <li> confirm that the ACCURACY/DAMAGE/POWER/STACKS attributes are lists
-		that contain the propper values (sums of base and sub-type
+	   <li> confirm that the ACCURACY/DAMAGE/POWER/STACKS attributes 
+	   	of the returned <em>GameAction</em>s 
+		contain the propper values (sums of base and sub-type
 		attributes, in the same order as their corresponding verbs)</li>
 	   <li> confirm the entries for which there should be no values
 	   	(e.g. the third entry in the POWER list when the third verb
@@ -93,49 +101,59 @@ A set of test cases to exercise this functionality would be:
 
 <P>
 The <tt>accept_action()</tt> method in this base class only knows
-how to handle attribute-changing verbs.  The functionality to be
-exercised is:
+how to handle attribute-changing verbs.  ATTACK verbs are handled
+by the <em>GameActor</em> sub-class.
+The functionality to be exercised is:
 <ul>
    <li>	proper summation of general RESISTANCE, and the verb-appropriate
-   	RESISTANCE.verb, and RESISTANCE.verb.subtype attributes</li>
+   	RESISTANCE.verb, and RESISTANCE.verb.subtype attributes.
+	</li>
 
    <li> proper iteration through the incoming STACKS, and proper 
    	comparison of TO_HIT and RESISTANCE+D100 to determine whether
-	or not a given STACK of the action is delivered</li>
+	or not a given STACK of the action is delivered.
+	</li>
 
    <li> proper update of receiver attributes in response to successful
-   	delivery of (both positive and negative) actions </li>
+   	delivery of (both positive and negative) actions.
+	</li>
 
-   <li> ensuring that LIFE cannot be raised above HP</li>
+   <li> ensuring that LIFE cannot be raised above HP, by doing
+   	multiple (guaranteed to succeed) actions that would
+	raise it more than possible.</li>
 
    <li> success is returned only if some STACKS are delivered</li>
 
-   <li> returned status correctly reflects complete RESISTANCE or
+   <li> returned status message correctly reflects complete RESISTANCE or
    	the number of STACKS successfully delivered</li>
 </ul>
 
 A set of test cases to exercise this functionality would be:
 <ul>
-   <li> pass actions for which there is no RESISTANCE,
-   	and different combinations of base, verb, and sub-type
-	RESISTANCE, and confirm that the correct sum has been
-	computed (for values both above and below TO_HIT)</li>
+   <li> pass actions for which there are various combinations
+   	of base, verb, and sub-type RESISTANCE (in values that
+	will cause the action to succeed or fail based on which
+	terms are included) and confirm that each action succeeds
+	or fails appropriately.
 
-   <li> pass actions with large numbers of STACKS, and confirm
+   <li> pass actions with large numbers of STACKS (some guaranteed to
+   	all succeed, some guaranteed to all fail, and some succeeding
+	or failing based on the roll), and confirm
 	<ul>
-	   <li> that success is true if any STACKS were delivered</li>
+	   <li> that success return value is true if any STACKS were delivered</li>
    	   <li>	(by parsing the status) that the number blocked is proportional to
 		(D100 + RESISTANCE - TO_HIT)/100</li>
 	   <li> that the affected attributes have been
 	   	correctly updates</li>
-	   <li> that it is impossible to raise LIFE above HP</li>
+	   <li> that it is impossible to raise LIFE above HP, even
+	   	if enough STACKS to do so get through</li>
 	</ul></li>
 </ul>
 </P>
 <P>
 The <tt>load()</tt> method, which draws on other classes, will be
 exercised (for both <em>GameActor</em>s and <em>GameContext</em>s
-in the game scenario tests.
+in the game <em>PyTest</em> tests.
 </P>
 
 <A name="gameaction"/><H3>GameAction Unit Testing</H3>
@@ -173,7 +191,7 @@ A set of test cases to exercise this functionality would be:
    <li> create <em>GameAction</em>s with a simple ATTACK, and
    	multiple sub-types, each of which has specified
 	(base) ACCURACY and DAMAGE attributes.<br>
-	Confirm that the action delivered to the recipient
+	Confirm that the delivered <em>GameAction</em>
 	has the correct verb, TO_HIT and TOTAL attributes.</li>
 
    <li> create <em>GameAction</em>s with a simple ATTACK, and
@@ -182,13 +200,13 @@ A set of test cases to exercise this functionality would be:
 	Create an initiator who has base ACCURACY and DAMAGE
 	bonuses, as well as sub-type bonuses for some
 	(but not all) of the verbs.<br>
-	Confirm that the action delivered to the recipient
+	Confirm that the delivered <em>GameAction</em>
 	has the correct verb, TO_HIT and TOTAL attributes.</li>
 
    <li> create <em>GameAction</em>s with a simple MENTAL action,
    	and multiple sub-types, each of which has specified
 	(base) POWER and STACKS attributes.<br>
-	Confirm that the action delivered to the recipient
+	Confirm that the delivered <em>GameAction</em>
 	has the correct verb, TO_HIT and TOTAL attributes.</li>
 
    <li> create <em>GameAction</em>s with a simple MENTAL action,
@@ -197,7 +215,7 @@ A set of test cases to exercise this functionality would be:
 	Create an initiator who has base POWER and STACKS
 	bonuses, as well as sub-type bonuses for some
 	(but not all) of the verbs.<br>
-	Confirm that the action delivered to the recipient
+	Confirm that the delivered <em>GameAction</em>
 	has the correct verb, TO_HIT and TOTAL attributes.</li>
 
    <li> create a <em>GameAction</em> with a compound action
@@ -217,11 +235,11 @@ A set of test cases to exercise this functionality would be:
 	to the recipient.</li>
 </ul>
 
-In support of these tests, we will create a test-recipient, who's
+In support of the last two, we will create a test-recipient, who's
 <tt>accept_action</tt> method simply returns (as status) the verb
 and attribute values.  The test functions can parse this output to
 confirm that the received <em>GameAction</em> had the expected
-verb, TO_HIT and TOTAL attributes.
+verb, TO_HIT and TOTAL attributes, in the correct order.
 </P>
 <P>
 The test cases to exercise this are combinations of situations to
@@ -282,12 +300,12 @@ The obvious formula errors are typos and missing values:
 By far, the most interesting code in <em>GameActor</em> is the ATTACK handling
 in the <tt>accept_action()</tt> method.  The obvious things to check are:
 <ul>
-   <li> confirming correct comparison of TO_HIT vs general, base-verb,
+   <li> confirming correct comparison of incoming TO_HIT vs general, base-verb,
         and sub-type EVASION</li>
    <li> confirming correct use of D100 rolls to determine whether or 
         not an ATTACK succeeds</li>
-   <li> confirming correct comparison of HIT_POINTS vs general, base-verb,
-        and sub-type PROTECTION</li>
+   <li> confirming correct comparison of incoming TOTAL damage vs general,
+   	base-verb, and sub-type PROTECTION</li>
    <li> confirming correct updates to the <tt>LIFE</tt>, <tt>alive</tt>,
         and <tt>disabled</tt> in response to received damage</li>
 </ul>
