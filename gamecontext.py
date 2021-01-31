@@ -130,3 +130,9 @@ class GameContext(GameObject):
         """
         if npc in self.npcs:
             self.npcs.remove(npc)
+
+
+# UNIT TESTING
+# TODO  {add,remove}_member, {add,remove}_npc
+# TODO  hierarchical get
+# TODO  search.{succeed,fail,proportional}

@@ -101,3 +101,8 @@ class NPC_guard(GameActor):
                             self.target.name, attack.get("HIT_POINTS"),
                             desc))
         return super(NPC_guard, self).take_turn()
+
+
+# UNIT TESTING
+#   targeting attacker
+#   calling for reinforcements
