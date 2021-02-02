@@ -348,6 +348,7 @@ class TestRecipient(Base):
                        actor, context))
 
 
+# pylint: disable=too-many-locals; I claim I need them all
 def base_attacks():
     """
     GameAction base ability ATTACK test cases:
@@ -373,6 +374,8 @@ def base_attacks():
         ("ATTACK.twenty",   20,   "20",     120,      20),
         ("ATTACK.thirty",   30,   "30",     130,      30)]
 
+    tried = 0
+    passed = 0
     for (verb, accuracy, damage, exp_hit, exp_dmg) in lame_attacks:
         action = GameAction(artifact, verb)
         if accuracy is not None:
@@ -383,20 +386,27 @@ def base_attacks():
         # see if the action contained the expected values
         to_hit = action.get("TO_HIT")
         hit_points = action.get("HIT_POINTS")
+        tried += 3
         if action.verb == verb and to_hit == exp_hit and hit_points == exp_dmg:
             print(result + " ... CORRECT")
+            passed += 3
         else:
             print(result)
             assert action.verb == verb, \
                 "incorrect action verb: expected " + verb
+            passed += 1
             assert action.get("TO_HIT") == exp_hit, \
                 "incorrect base accuracy: expected " + str(exp_hit)
+            passed += 1
             assert action.get("HIT_POINTS") == exp_dmg, \
                 "incorrect base damage: expected " + str(exp_dmg)
+            passed += 1
 
     print()
+    return (tried, passed)
 
 
+# pylint: disable=too-many-locals; I claim I need them all
 def subtype_attacks():
     """
     GameAction sub-type ability ATTACK test cases:
@@ -429,6 +439,8 @@ def subtype_attacks():
         ("ATTACK.twenty",   20,   "20",     150,      50),
         ("ATTACK.thirty",   30,   "30",     170,      70)]
 
+    tried = 0
+    passed = 0
     for (verb, accuracy, damage, exp_hit, exp_dmg) in skilled_attacks:
         action = GameAction(artifact, verb)
         if accuracy is not None:
@@ -437,21 +449,28 @@ def subtype_attacks():
         (_, result) = action.act(skilled, victim, context)
 
         # see if the action contained the expected values
+        tried += 3
         to_hit = action.get("TO_HIT")
         hit_points = action.get("HIT_POINTS")
         if action.verb == verb and to_hit == exp_hit and hit_points == exp_dmg:
             print(result + " ... CORRECT")
+            passed += 3
         else:
             print(result)
             assert action.verb == verb, \
                 "incorrect action verb: expected " + verb
+            passed += 1
             assert action.get("TO_HIT") == exp_hit, \
                 "incorrect base accuracy: expected " + str(exp_hit)
+            passed += 1
             assert action.get("HIT_POINTS") == exp_dmg, \
                 "incorrect base damage: expected " + str(exp_dmg)
+            passed += 1
     print()
+    return (tried, passed)
 
 
+# pylint: disable=too-many-locals; I claim I need them all
 def base_conditions():
     """
     GameAction base ability condition test cases:
@@ -477,6 +496,8 @@ def base_conditions():
         ("MENTAL.Y",     20,   "20",     120,      20),
         ("MENTAL.Z",     30,   "30",     130,      30)]
 
+    tried = 0
+    passed = 0
     for (verb, power, stacks, exp_hit, exp_stx) in lame_attacks:
         action = GameAction(artifact, verb)
         if power is not None:
@@ -485,21 +506,28 @@ def base_conditions():
         (_, result) = action.act(lame, victim, context)
 
         # see if the action contained the expected values
+        tried += 3
         to_hit = action.get("TO_HIT")
         stacks = action.get("TOTAL")
         if action.verb == verb and to_hit == exp_hit and stacks == exp_stx:
             print(result + " ... CORRECT")
+            passed += 3
         else:
             print(result)
             assert action.verb == verb, \
                 "incorrect action verb: expected " + verb
+            passed += 1
             assert action.get("TO_HIT") == exp_hit, \
                 "incorrect base accuracy: expected " + str(exp_hit)
+            passed += 1
             assert action.get("TOTAL") == exp_stx, \
                 "incorrect base stacks: expected " + str(exp_stx)
+            passed += 1
     print()
+    return (tried, passed)
 
 
+# pylint: disable=too-many-locals; I claim I need them all
 def subtype_conditions():
     """
     GameAction sub-type ability condition test cases:
@@ -532,6 +560,8 @@ def subtype_conditions():
         ("MENTAL.Y",     20,   "20",     150,      50),
         ("MENTAL.Z",     30,   "30",     170,      70)]
 
+    tried = 0
+    passed = 0
     for (verb, power, stacks, exp_hit, exp_stx) in skilled_attacks:
         action = GameAction(artifact, verb)
         if power is not None:
@@ -540,19 +570,25 @@ def subtype_conditions():
         (_, result) = action.act(skilled, victim, context)
 
         # see if the action contained the expected values
+        tried += 3
         to_hit = action.get("TO_HIT")
         stacks = action.get("TOTAL")
         if action.verb == verb and to_hit == exp_hit and stacks == exp_stx:
             print(result + " ... CORRECT")
+            passed += 3
         else:
             print(result)
             assert action.verb == verb, \
                 "incorrect action verb: expected " + verb
+            passed += 1
             assert action.get("TO_HIT") == exp_hit, \
                 "incorrect base accuracy: expected " + str(exp_hit)
+            passed += 1
             assert action.get("TOTAL") == exp_stx, \
                 "incorrect base stacks: expected " + str(exp_stx)
+            passed += 1
     print()
+    return (tried, passed)
 
 
 def compound_verbs():
@@ -599,12 +635,18 @@ def compound_verbs():
         "seventh (WONT-HAPPEN) action should not have been sent"
 
     print()
+    return (8, 8)
 
 
 if __name__ == "__main__":
-    base_attacks()
-    subtype_attacks()
-    base_conditions()
-    subtype_conditions()
-    compound_verbs()
-    print("All GameAction test cases passed")
+    (T1, P1) = base_attacks()
+    (T2, P2) = subtype_attacks()
+    (T3, P3) = base_conditions()
+    (T4, P4) = subtype_conditions()
+    (T5, P5) = compound_verbs()
+    TRY = T1 + T2 + T3 + T4 + T5
+    PASS = P1 + P2 + P3 + P4 + P5
+    if TRY == PASS:
+        print("Passed all {} GameAction tests".format(PASS))
+    else:
+        print("FAILED {}/{} GameAction tests".format(TRY-PASS, TRY))
