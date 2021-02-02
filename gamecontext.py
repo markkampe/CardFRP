@@ -314,7 +314,63 @@ def get_tests():
     """
     exercise hierarchical gets
     """
-    return (1, 1)
+    tried = 0
+    passed = 0
+
+    c_1 = GameContext("C1")
+    c_2 = GameContext("C2", parent=c_1)
+    c_3 = GameContext("C3", parent=c_2)
+
+    print("gets are satisfied from nearest context")
+    c_1.set("CAME_FROM", 1)
+    c_2.set("CAME_FROM", 2)
+    c_3.set("CAME_FROM", 3)
+
+    ret = c_1.get("CAME_FROM")
+    tried += 1
+    assert ret == 1, \
+        "grand-parent.get() returns " + str(ret) + "!=1"
+    passed += 1
+    ret = c_2.get("CAME_FROM")
+    tried += 1
+    assert ret == 2, \
+        "parent.get() returns " + str(ret) + "!=2"
+    passed += 1
+    ret = c_3.get("CAME_FROM")
+    tried += 1
+    assert ret == 3, \
+        "child.get() returns " + str(ret) + "!=1"
+    passed += 1
+
+    print("gets follow parents if necessary")
+    c_3.set("IN_THREE", 3)
+    ret = c_3.get("IN_THREE")
+    tried += 1
+    assert ret == 3, \
+        "child.get() does not return its own value"
+    passed += 1
+    c_2.set("IN_TWO", 2)
+    ret = c_3.get("IN_TWO")
+    tried += 1
+    assert ret == 2, \
+        "child.get() does not return parent's value"
+    passed += 1
+    c_1.set("IN_ONE", 1)
+    ret = c_3.get("IN_ONE")
+    tried += 1
+    assert ret == 1, \
+        "child.get() does not return grand-parents value"
+    passed += 1
+
+    print("absent values reported as None")
+    ret = c_3.get("NOWHERE")
+    tried += 1
+    assert ret is None, \
+        "get() of non-existent value returns " + str(ret)
+    passed += 1
+
+    print()
+    return (tried, passed)
 
 
 def search_tests():
