@@ -402,14 +402,20 @@ def action_test():
         "first action not correctly returned"
     assert (actions[1].verb == "SECOND ACTION"), \
         "second action not correctly returned"
+    return (3, 3)
 
 
+# pylint: disable=too-many-locals,too-many-statements
 def weapon_test():
     """
     test for weapon actions and damage
     """
+    tried = 0
+    passed = 0
+
     # by default a weapon has no actions or attributes
     w_0 = GameObject("Null Weapon")
+    tried += 4
     assert w_0.name == "Null Weapon", \
         "Incorrect name: expected w_0"
     assert w_0.get("DAMAGE") is None, \
@@ -419,6 +425,7 @@ def weapon_test():
     actions = w_0.possible_actions(None, None)
     assert not actions, \
         "incorrect default actions, expected None"
+    passed += 4
     print("test #1: " + str(w_0) +
           " ... NO ATTACKS, ACCURACY or DAMAGE - CORRECT")
 
@@ -427,6 +434,7 @@ def weapon_test():
     w_1.set("ACTIONS", "ATTACK")
     w_1.set("ACCURACY", 66)
     w_1.set("DAMAGE", "666")
+    tried += 6
     assert w_1.get("DAMAGE") == "666", \
         "Incorrect default damage: expected '666'"
     assert w_1.get("ACCURACY") == 66, \
@@ -440,6 +448,7 @@ def weapon_test():
         "incorrect base damage, expected '666', got " + str(actions[0])
     assert actions[0].get("ACCURACY") == "66", \
         "incorrect base accuracy, expected 66, got " + str(actions[0])
+    passed += 6
     print("test #2: " + str(w_1) +
           " ... BASE ATTACK, ACCURACY and DAMAGE - CORRECT")
 
@@ -468,13 +477,16 @@ def weapon_test():
 
     w_2.set("ACTIONS", verbs)
     actions = w_2.possible_actions(None, None)
+    tried += 1
     assert len(actions) == 3, \
         "incorrect actions list, expected 3, got " + str(actions)
+    passed += 1
 
     # pylint: disable=consider-using-enumerate; two parallel lists
     for index in range(len(actions)):
         (verb, accuracy, damage, exp_acc, exp_dmg) = attacks[index]
         action = actions[index]
+        tried += 3
         assert action.verb == verb, \
             "action {}, verb={}, expected {}".format(index, action.verb, verb)
         assert action.get("ACCURACY") == exp_acc, \
@@ -483,10 +495,12 @@ def weapon_test():
         assert action.get("DAMAGE") == exp_dmg, \
             "action {}, expected DAMAGE={}, got {}". \
             format(action.verb, exp_dmg, action.get("DAMAGE"))
+        passed += 3
         print("test #3: {} {} ... ACCURACY({}) and DAMAGE({}) - CORRECT".
               format(w_2.name, action.verb,
                      "base plus sub-type" if "." in verb else "base only",
                      "sub-type only" if "." in verb else "base only"))
+    return (tried, passed)
 
 
 # pylint: disable=too-many-statements
@@ -513,18 +527,24 @@ def compound_test():
     obj.set("POWER.CONDITION.six", 6)
     obj.set("STACKS.CONDITION.six", 66)
 
+    tried = 0
+    passed = 0
+
     actions = obj.possible_actions(None, None)
     for action in actions:
         if action.verb == first:
+            tried += 8
             # attack accuracy = [base+sub, base-only]
             accuracies = action.get("ACCURACY").split(',')
             assert accuracies[0] == "15", "ACCURACY.one not added"
             assert accuracies[1] == "10", "base ACCURACY not used"
+            passed += 2
 
             # attack damage = [sub, base-only]
             damages = action.get("DAMAGE").split(',')
             assert damages[0] == "666", "DAMAGE.one not used"
             assert damages[1] == "60", "base DAMAGE not used"
+            passed += 2
             print("test #4a: {} {} ...\n\t  ACCURACY(S), DAMAGE(S) - CORRECT".
                   format(obj.name, action.verb))
 
@@ -532,26 +552,32 @@ def compound_test():
             powers = action.get("POWER").split(',')
             assert powers[0] == "30", "POWER.two not added in"
             assert powers[1] == "20", "base POWER not used"
+            passed += 2
 
             # condition stacks = [sub, base=only]
             stacks = action.get("STACKS").split(',')
             assert stacks[0] == "6", "STACKS.two not used"
             assert stacks[1] == "3", "base STACKS not used"
+            passed += 2
             print("test #4b: {} {} ...\n\t  POWER(S), STACKS(S) - CORRECT".
                   format(obj.name, action.verb))
         elif action.verb == second:
+            tried += 4
             accuracies = action.get("ACCURACY").split(',')
             assert accuracies[0] == "25", "ACCURACY.five not added"
             damages = action.get("DAMAGE").split(',')
             assert damages[0] == "55", "DAMAGE.five not used"
+            passed += 2
 
             powers = action.get("POWER").split(',')
             assert powers[0] == "26", "POWER.six not added in"
             stacks = action.get("STACKS").split(',')
             assert stacks[0] == "66", "STACKS.six not used"
+            passed += 2
             print("test #4c: {} {} ... \n\tPOWER, STACKS - CORRECT".
                   format(obj.name, action.verb))
         else:
+            tried += 1
             assert False, "Incorrect verb: " + action.verb
 
     # next set of tests are combinations w/no base attributes
@@ -599,6 +625,7 @@ def compound_test():
 
     print("test #4e: {} {} ... \n\tPOWER, STACKS - CORRECT".
           format(obj.name, action.verb))
+    return (tried, passed)
 
 
 # TODO test cases for accept_action
@@ -609,7 +636,14 @@ def compound_test():
 #   life cannot be raised above HP
 #
 if __name__ == "__main__":
-    action_test()
-    weapon_test()
-    compound_test()
-    print("All GameObject test cases passed")
+    (T1, P1) = action_test()
+    (T2, P2) = weapon_test()
+    (T3, P3) = compound_test()
+
+    # report
+    TRY = T1 + T2 + T3
+    PASS = P1 + P2 + P3
+    if TRY == PASS:
+        print("Passed all {} GameObject tests".format(PASS))
+    else:
+        print("FAILED {}/{} GameObject tests".format(TRY-PASS, TRY))
