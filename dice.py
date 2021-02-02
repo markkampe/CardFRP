@@ -217,7 +217,10 @@ def main():
                   format(formula, sys.exc_info()[1]))
             tests_passed += 1
 
-    print("{}/{} Dice test casees passed\n".format(tests_passed, tests_run))
+    if tests_run == tests_passed:
+        print("Passed all {} Dice tests".format(tests_passed))
+    else:
+        print("FAILED {}/{} Dice tests".format(tests_run-tests_passed, tests_run))
 
 
 if __name__ == "__main__":
