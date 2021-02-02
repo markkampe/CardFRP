@@ -403,6 +403,7 @@ def simple_condition_tests():
     print()
     return (tried, passed)
 
+
 def sub_condition_tests():
     """
     conditions that draw on sub-type RESISTANCE
@@ -471,16 +472,23 @@ def random_condition_tests():
     return (2, 2)
 
 
-if __name__ == "__main__":
-    (T1, P1) = simple_attack_tests()
-    (T2, P2) = sub_attack_tests()
-    (T3, P3) = random_attack_tests()
-    (T4, P4) = simple_condition_tests()
-    (T5, P5) = sub_condition_tests()
-    (T6, P6) = random_condition_tests()
-    TRY = T1 + T2 + T3 + T4 + T5 + T6
-    PASS = P1 + P2 + P3 + P4 + P5 + P6
-    if TRY == PASS:
-        print("Passed all {} GameActor tests".format(PASS))
+def main():
+    """
+    Run all unit-test cases and print out summary of results
+    """
+    (t_1, p_1) = simple_attack_tests()
+    (t_2, p_2) = sub_attack_tests()
+    (t_3, p_3) = random_attack_tests()
+    (t_4, p_4) = simple_condition_tests()
+    (t_5, p_5) = sub_condition_tests()
+    (t_6, p_6) = random_condition_tests()
+    tried = t_1 + t_2 + t_3 + t_4 + t_5 + t_6
+    passed = p_1 + p_2 + p_3 + p_4 + p_5 + p_6
+    if tried == passed:
+        print("Passed all {} GameActor tests".format(passed))
     else:
-        print("FAILED {}/{} GameActor tests".format(TRY-PASS, TRY))
+        print("FAILED {}/{} GameActor tests".format(tried-passed, tried))
+
+
+if __name__ == "__main__":
+    main()

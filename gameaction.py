@@ -638,15 +638,22 @@ def compound_verbs():
     return (8, 8)
 
 
-if __name__ == "__main__":
-    (T1, P1) = base_attacks()
-    (T2, P2) = subtype_attacks()
-    (T3, P3) = base_conditions()
-    (T4, P4) = subtype_conditions()
-    (T5, P5) = compound_verbs()
-    TRY = T1 + T2 + T3 + T4 + T5
-    PASS = P1 + P2 + P3 + P4 + P5
-    if TRY == PASS:
-        print("Passed all {} GameAction tests".format(PASS))
+def main():
+    """
+    Run all unit-test cases and print out summary of results
+    """
+    (t_1, p_1) = base_attacks()
+    (t_2, p_2) = subtype_attacks()
+    (t_3, p_3) = base_conditions()
+    (t_4, p_4) = subtype_conditions()
+    (t_5, p_5) = compound_verbs()
+    tried = t_1 + t_2 + t_3 + t_4 + t_5
+    passed = p_1 + p_2 + p_3 + p_4 + p_5
+    if tried == passed:
+        print("Passed all {} GameAction tests".format(passed))
     else:
-        print("FAILED {}/{} GameAction tests".format(TRY-PASS, TRY))
+        print("FAILED {}/{} GameAction tests".format(tried-passed, tried))
+
+
+if __name__ == "__main__":
+    main()

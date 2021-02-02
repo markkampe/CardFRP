@@ -625,6 +625,8 @@ def compound_test():
 
     print("test #4e: {} {} ... \n\tPOWER, STACKS - CORRECT".
           format(obj.name, action.verb))
+
+    print()
     return (tried, passed)
 
 
@@ -635,15 +637,20 @@ def compound_test():
 #   correct return of delivered stacks
 #   life cannot be raised above HP
 #
-if __name__ == "__main__":
-    (T1, P1) = action_test()
-    (T2, P2) = weapon_test()
-    (T3, P3) = compound_test()
-
-    # report
-    TRY = T1 + T2 + T3
-    PASS = P1 + P2 + P3
-    if TRY == PASS:
-        print("Passed all {} GameObject tests".format(PASS))
+def main():
+    """
+    Run all unit-test cases and print out summary of results
+    """
+    (t_1, p_1) = action_test()
+    (t_2, p_2) = weapon_test()
+    (t_3, p_3) = compound_test()
+    tried = t_1 + t_2 + t_3
+    passed = p_1 + p_2 + p_3
+    if tried == passed:
+        print("Passed all {} GameObject tests".format(passed))
     else:
-        print("FAILED {}/{} GameObject tests".format(TRY-PASS, TRY))
+        print("FAILED {}/{} GameObject tests".format(tried-passed, tried))
+
+
+if __name__ == "__main__":
+    main()

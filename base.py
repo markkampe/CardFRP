@@ -105,10 +105,11 @@ def main():
         "New description does not default to None"
     passed += 2
 
+    print()
     if tried == passed:
-        print("Passed all {} GameContext tests".format(passed))
+        print("Passed all {} Base tests".format(passed))
     else:
-        print("FAILED {}/{} GameContext tests".format(tried-passed, tried))
+        print("FAILED {}/{} Base tests".format(tried-passed, tried))
 
 
 if __name__ == "__main__":
