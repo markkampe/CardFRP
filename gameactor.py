@@ -163,6 +163,7 @@ class GameActor(GameObject):
 
 
 # UNIT TESTING
+# pylint: disable=too-many-statements
 def simple_attack_tests():
     """
     Base attacks with assured outcomes
@@ -170,6 +171,9 @@ def simple_attack_tests():
     attacker = GameActor("attacker")
     target = GameActor("target")
     context = GameContext("unit-test")
+
+    tried = 0
+    passed = 0
 
     # attack guarnteed to fail
     target.set("LIFE", 10)
@@ -180,9 +184,11 @@ def simple_attack_tests():
     print("{} tries to {} {} with {}".
           format(attacker, action, target, source))
     (_, desc) = action.act(attacker, target, context)
+    tried += 1
     assert target.get("LIFE") == 10, \
         "{} took damage, LIFE: {} -> {}". \
         format(target, 10, target.get("LIFE"))
+    passed += 1
     print("    " + desc)
     print()
 
@@ -193,10 +199,12 @@ def simple_attack_tests():
     action.set("DAMAGE", "1")
     print("{} tries to {} {} with {}".
           format(attacker, action, target, source))
+    tried += 1
     (_, desc) = action.act(attacker, target, context)
     assert target.get("LIFE") == 9, \
         "{} took incorrect damage, LIFE: {} -> {}". \
         format(target, 10, target.get("LIFE"))
+    passed += 1
     print("    " + desc)
     print()
 
@@ -209,10 +217,12 @@ def simple_attack_tests():
     target.set("LIFE", 10)
     print("{} tries to {} {} with {}".
           format(attacker, action, target, source))
+    tried += 1
     (_, desc) = action.act(attacker, target, context)
     assert target.get("LIFE") == 10, \
         "{} took damage, LIFE: {} -> {}". \
         format(target, 10, target.get("LIFE"))
+    passed += 1
     print("    " + desc)
     print()
 
@@ -226,12 +236,15 @@ def simple_attack_tests():
     target.set("PROTECTION", 1)
     print("{} tries to {} {} with {}".
           format(attacker, action, target, source))
+    tried += 1
     (_, desc) = action.act(attacker, target, context)
     assert target.get("LIFE") == 10, \
         "{} took damage, LIFE: {} -> {}". \
         format(target, 10, target.get("LIFE"))
+    passed += 1
     print("    " + desc)
     print()
+    return (tried, passed)
 
 
 def sub_attack_tests():
@@ -241,6 +254,9 @@ def sub_attack_tests():
     attacker = GameActor("attacker")
     target = GameActor("target")
     context = GameContext("unit-test")
+
+    tried = 0
+    passed = 0
 
     # evasion succeeds because base and sub-type add
     source = GameObject("evadable")
@@ -255,9 +271,11 @@ def sub_attack_tests():
     print("{} tries to {} {} with {}".
           format(attacker, action, target, source))
     (_, desc) = action.act(attacker, target, context)
+    tried += 1
     assert target.get("LIFE") == 10, \
         "{} took damage, LIFE: {} -> {}". \
         format(target, 10, target.get("LIFE"))
+    passed += 1
     print("    " + desc)
 
     # protection is sum of base and sub-type
@@ -275,11 +293,14 @@ def sub_attack_tests():
     print("{} tries to {} {} with {}".
           format(attacker, action, target, source))
     (_, desc) = action.act(attacker, target, context)
+    tried += 1
     assert target.get("LIFE") == 8, \
         "{} took damage, LIFE: {} -> {}". \
         format(target, 8, target.get("LIFE"))
+    passed += 1
     print("    " + desc)
     print()
+    return (tried, passed)
 
 
 def random_attack_tests():
@@ -310,6 +331,7 @@ def random_attack_tests():
     assert life > 10 - rounds, "{} took damage every round".format(target)
     print("{} was hit {} times in {} rounds".format(target, 10 - life, rounds))
     print()
+    return (2, 2)
 
 
 def simple_condition_tests():
@@ -319,6 +341,9 @@ def simple_condition_tests():
     sender = GameActor("sender")
     target = GameActor("target")
     context = GameContext("unit-test")
+
+    tried = 0
+    passed = 0
 
     # impossibly weak condition will not happen
     source = GameObject("weak-condition")
@@ -335,6 +360,8 @@ def simple_condition_tests():
         "{} RECEIVED {}={}". \
         format(target, action.verb, target.get(action.verb))
     print("    " + desc)
+    tried += 2
+    passed += 2
 
     # un-resisted condition will always happen
     source = GameObject("strong-condition")
@@ -351,6 +378,8 @@ def simple_condition_tests():
         "{} RECEIVED {}={}". \
         format(target, action.verb, target.get(action.verb))
     print("    " + desc)
+    tried += 2
+    passed += 2
 
     # fully resisted condition will never happen
     source = GameObject("base-class-resisted-condition")
@@ -368,9 +397,11 @@ def simple_condition_tests():
         "{} RECEIVED {}={}". \
         format(target, action.verb, target.get(action.verb))
     print("    " + desc)
+    tried += 2
+    passed += 2
 
     print()
-
+    return (tried, passed)
 
 def sub_condition_tests():
     """
@@ -399,6 +430,7 @@ def sub_condition_tests():
     print("    " + desc)
 
     print()
+    return (2, 2)
 
 
 def random_condition_tests():
@@ -436,13 +468,19 @@ def random_condition_tests():
           format(target, received, delivered, int(expected)))
 
     print()
+    return (2, 2)
 
 
 if __name__ == "__main__":
-    simple_attack_tests()
-    sub_attack_tests()
-    random_attack_tests()
-    simple_condition_tests()
-    sub_condition_tests()
-    random_condition_tests()
-    print("All GameActor test cases passed")
+    (T1, P1) = simple_attack_tests()
+    (T2, P2) = sub_attack_tests()
+    (T3, P3) = random_attack_tests()
+    (T4, P4) = simple_condition_tests()
+    (T5, P5) = sub_condition_tests()
+    (T6, P6) = random_condition_tests()
+    TRY = T1 + T2 + T3 + T4 + T5 + T6
+    PASS = P1 + P2 + P3 + P4 + P5 + P6
+    if TRY == PASS:
+        print("Passed all {} GameActor tests".format(PASS))
+    else:
+        print("FAILED {}/{} GameActor tests".format(TRY-PASS, TRY))
