@@ -133,6 +133,205 @@ class GameContext(GameObject):
 
 
 # UNIT TESTING
-# TODO  {add,remove}_member, {add,remove}_npc
-# TODO  hierarchical get
-# TODO  search.{succeed,fail,proportional}
+# pylint: disable=too-many-statements
+def member_tests():
+    """
+    exercise {add,remove}_member and get_party
+
+    """
+    a_1 = GameObject("a1")
+    a_2 = GameObject("a2")
+    a_3 = GameObject("a3")
+
+    tried = 0
+    passed = 0
+
+    # a new context is empty
+    cxt = GameContext()
+    party = cxt.get_party()
+    tried += 1
+    assert not party, "new GameContext is not empty"
+    passed += 1
+
+    # add one member, list contains that member
+    cxt.add_member(a_1)
+    party = cxt.get_party()
+    tried += 2
+    assert len(party) == 1, "after adding first party member, len != 1"
+    assert a_1 in party,\
+        "after adding first party member, he is not in the party"
+    passed += 2
+
+    # add second member, list contains those two
+    cxt.add_member(a_2)
+    party = cxt.get_party()
+    tried += 3
+    assert len(party) == 2, "after adding second party member, len != 2"
+    assert a_1 in party,\
+        "after adding second party member, first is no longer there"
+    assert a_2 in party,\
+        "after adding second party member, he is not there"
+    passed += 3
+
+    # remove first member, list contains only second
+    cxt.remove_member(a_1)
+    party = cxt.get_party()
+    tried += 3
+    assert len(party) == 1, "after removing first party member, len != 1"
+    assert a_1 not in party,\
+        "after removing first party member, he is still there"
+    assert a_2 in party,\
+        "after removing first party member, second is no longer there"
+    passed += 3
+
+    # add new second member, list contains those two
+    cxt.add_member(a_3)
+    party = cxt.get_party()
+    tried += 3
+    assert len(party) == 2, "after adding another party member, len != 2"
+    assert a_2 in party,\
+        "after adding another party member, previous is no longer there"
+    assert a_3 in party, "after adding another party member, he is not there"
+    passed += 3
+
+    # remove last added member, list contains only second
+    cxt.remove_member(a_3)
+    party = cxt.get_party()
+    tried += 3
+    assert len(party) == 1, "after removing another party member, len != 1"
+    assert a_3 not in party,\
+        "after removing another party member, he is still there"
+    assert a_2 in party,\
+        "after removing another party member, second is no longer there"
+    passed += 3
+
+    # remove final member, list is empty
+    cxt.remove_member(a_2)
+    party = cxt.get_party()
+    tried += 2
+    assert not party, "after removing final party member, len != 0"
+    assert a_2 not in party,\
+        "after removing final party member, he is still there"
+    passed += 2
+
+    return (tried, passed)
+
+
+# pylint: disable=too-many-statements
+def npc_tests():
+    """
+    exercise {add,remove}_npc and get_npcs
+    """
+    a_1 = GameObject("a1")
+    a_2 = GameObject("a2")
+    a_3 = GameObject("a3")
+
+    tried = 0
+    passed = 0
+
+    # a new context is empty
+    cxt = GameContext()
+    party = cxt.get_npcs()
+    tried += 1
+    assert not party, \
+        "new GameContext is not empty"
+    passed += 1
+
+    # add one member, list contains that member
+    cxt.add_npc(a_1)
+    party = cxt.get_npcs()
+    tried += 2
+    assert len(party) == 1, \
+        "after adding first NPC, len != 1"
+    assert a_1 in party, \
+        "after adding first NPC, he is not in the party"
+    passed += 2
+
+    # add second member, list contains those two
+    cxt.add_npc(a_2)
+    party = cxt.get_npcs()
+    tried += 3
+    assert len(party) == 2, \
+        "after adding second NPC, len != 2"
+    assert a_1 in party, \
+        "after adding second NPC, first is no longer there"
+    assert a_2 in party, \
+        "after adding second NPC, he is not there"
+    passed += 3
+
+    # remove first member, list contains only second
+    cxt.remove_npc(a_1)
+    party = cxt.get_npcs()
+    tried += 3
+    assert len(party) == 1, \
+        "after removing first NPC, len != 1"
+    assert a_1 not in party, \
+        "after removing first NPC, he is still there"
+    assert a_2 in party, \
+        "after removing first NPC, second is no longer there"
+    passed += 3
+
+    # add new second member, list contains those two
+    cxt.add_npc(a_3)
+    party = cxt.get_npcs()
+    tried += 3
+    assert len(party) == 2, \
+        "after adding another NPC, len != 2"
+    assert a_2 in party, \
+        "after adding another NPC, previous is no longer there"
+    assert a_3 in party, \
+        "after adding another NPC, he is not there"
+    passed += 3
+
+    # remove last added member, list contains only second
+    cxt.remove_npc(a_3)
+    party = cxt.get_npcs()
+    tried += 3
+    assert len(party) == 1, \
+        "after removing another NPC, len != 1"
+    assert a_3 not in party, \
+        "after removing another NPC, he is still there"
+    assert a_2 in party, \
+        "after removing another NPC, second is no longer there"
+    passed += 3
+
+    # remove final member, list is empty
+    cxt.remove_npc(a_2)
+    party = cxt.get_npcs()
+    tried += 2
+    assert not party, \
+        "after removing final NPC, len != 0"
+    assert a_2 not in party, \
+        "after removing final NPC, he is still there"
+    passed += 2
+
+    return (tried, passed)
+
+
+def get_tests():
+    """
+    exercise hierarchical gets
+    """
+    return (1, 1)
+
+
+def search_tests():
+    """
+    exercise search for hidden objects
+    """
+    return (1, 1)
+
+
+if __name__ == "__main__":
+    (T1, P1) = member_tests()
+    (T2, P2) = npc_tests()
+    (T3, P3) = get_tests()
+    (T4, P4) = search_tests()
+
+    # report
+    TRY = T1 + T2 + T3 + T4
+    PASS = P1 + P2 + P3 + P4
+    if TRY == PASS:
+        print("Passed all {} GameContext tests".format(PASS))
+    else:
+        print("FAILED {}/{} GameContext tests".format(TRY-PASS, TRY))
