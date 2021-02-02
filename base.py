@@ -60,17 +60,23 @@ def main():
     go1 = Base("Base Object 1", describe)
     go2 = Base("Base Object 2")
 
+    tried = 0
+    passed = 0
+
     # new object has name, description, and nothing else
     print("Created 'Base 1', descr={}\n    got '{}'"
           .format(describe, str(go1)))
+    tried += 2
     assert (go1.name == "Base Object 1"), \
         "New object does not have assigned name"
     assert (go1.description == describe), \
         "New object does not have assigned description"
+    passed += 2
 
     # a new set correctly adds a value
     print("    before set(): get('attribute#1') -> {}"
           .format(go1.get("attribute#1")))
+    tried += 2
     assert (go1.get("attribute#1") is None), \
         "New object has attribute values before set"
     go1.set("attribute#1", "value1")
@@ -78,23 +84,31 @@ def main():
           .format(go1.get("attribute#1")))
     assert (go1.get("attribute#1") == "value1"), \
         "set does not correctly set new value"
+    passed += 2
 
     # a second set correctly changes a value
     go1.set("attribute#1", "value2")
     print("    after set('attribute#1', 'value2'): get('attribute#1') -> '{}'"
           .format(go1.get("attribute#1")))
+    tried += 1
     assert (go1.get("attribute#1") == "value2"), \
         "set does not correctly change value"
+    passed += 1
 
     # description defaults to None
     print("Created 'Base Object 2, descr=None\n    got '{}'"
           .format(str(go2)))
+    tried += 2
     assert (go2.name == "Base Object 2"), \
         "New object does not have assigned name"
     assert (go2.description is None), \
         "New description does not default to None"
+    passed += 2
 
-    print("All Base test cases passed")
+    if tried == passed:
+        print("Passed all {} GameContext tests".format(passed))
+    else:
+        print("FAILED {}/{} GameContext tests".format(tried-passed, tried))
 
 
 if __name__ == "__main__":
