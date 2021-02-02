@@ -146,14 +146,14 @@ def member_tests():
     tried = 0
     passed = 0
 
-    # a new context is empty
+    print("creating a new GameContext and confirming no party")
     cxt = GameContext()
     party = cxt.get_party()
     tried += 1
     assert not party, "new GameContext is not empty"
     passed += 1
 
-    # add one member, list contains that member
+    print("adding a first member and confirming party of one")
     cxt.add_member(a_1)
     party = cxt.get_party()
     tried += 2
@@ -162,7 +162,7 @@ def member_tests():
         "after adding first party member, he is not in the party"
     passed += 2
 
-    # add second member, list contains those two
+    print("adding a second member and confirming party of two")
     cxt.add_member(a_2)
     party = cxt.get_party()
     tried += 3
@@ -173,7 +173,7 @@ def member_tests():
         "after adding second party member, he is not there"
     passed += 3
 
-    # remove first member, list contains only second
+    print("removing first member and confirming party of one")
     cxt.remove_member(a_1)
     party = cxt.get_party()
     tried += 3
@@ -184,7 +184,7 @@ def member_tests():
         "after removing first party member, second is no longer there"
     passed += 3
 
-    # add new second member, list contains those two
+    print("adding a third member and confirming party of two")
     cxt.add_member(a_3)
     party = cxt.get_party()
     tried += 3
@@ -194,7 +194,7 @@ def member_tests():
     assert a_3 in party, "after adding another party member, he is not there"
     passed += 3
 
-    # remove last added member, list contains only second
+    print("removing third member and confirming party of one")
     cxt.remove_member(a_3)
     party = cxt.get_party()
     tried += 3
@@ -205,7 +205,7 @@ def member_tests():
         "after removing another party member, second is no longer there"
     passed += 3
 
-    # remove final member, list is empty
+    print("removing final member and confirming no party")
     cxt.remove_member(a_2)
     party = cxt.get_party()
     tried += 2
@@ -214,6 +214,7 @@ def member_tests():
         "after removing final party member, he is still there"
     passed += 2
 
+    print()
     return (tried, passed)
 
 
@@ -229,7 +230,7 @@ def npc_tests():
     tried = 0
     passed = 0
 
-    # a new context is empty
+    print("creating a new GameContext and confirming no NPCs")
     cxt = GameContext()
     party = cxt.get_npcs()
     tried += 1
@@ -237,7 +238,7 @@ def npc_tests():
         "new GameContext is not empty"
     passed += 1
 
-    # add one member, list contains that member
+    print("adding first NPC and confirming one NPC")
     cxt.add_npc(a_1)
     party = cxt.get_npcs()
     tried += 2
@@ -247,7 +248,7 @@ def npc_tests():
         "after adding first NPC, he is not in the party"
     passed += 2
 
-    # add second member, list contains those two
+    print("adding second NPC and confirming two NPCs")
     cxt.add_npc(a_2)
     party = cxt.get_npcs()
     tried += 3
@@ -259,7 +260,7 @@ def npc_tests():
         "after adding second NPC, he is not there"
     passed += 3
 
-    # remove first member, list contains only second
+    print("removing first NPC and confirming one NPC")
     cxt.remove_npc(a_1)
     party = cxt.get_npcs()
     tried += 3
@@ -271,7 +272,7 @@ def npc_tests():
         "after removing first NPC, second is no longer there"
     passed += 3
 
-    # add new second member, list contains those two
+    print("adding third NPC and confirming two NPCs")
     cxt.add_npc(a_3)
     party = cxt.get_npcs()
     tried += 3
@@ -283,7 +284,7 @@ def npc_tests():
         "after adding another NPC, he is not there"
     passed += 3
 
-    # remove last added member, list contains only second
+    print("removing third NPC and confirming one NPC")
     cxt.remove_npc(a_3)
     party = cxt.get_npcs()
     tried += 3
@@ -295,7 +296,7 @@ def npc_tests():
         "after removing another NPC, second is no longer there"
     passed += 3
 
-    # remove final member, list is empty
+    print("removing final NPC and confirming no NPCs")
     cxt.remove_npc(a_2)
     party = cxt.get_npcs()
     tried += 2
@@ -305,6 +306,7 @@ def npc_tests():
         "after removing final NPC, he is still there"
     passed += 2
 
+    print()
     return (tried, passed)
 
 
@@ -322,16 +324,21 @@ def search_tests():
     return (1, 1)
 
 
-if __name__ == "__main__":
-    (T1, P1) = member_tests()
-    (T2, P2) = npc_tests()
-    (T3, P3) = get_tests()
-    (T4, P4) = search_tests()
-
-    # report
-    TRY = T1 + T2 + T3 + T4
-    PASS = P1 + P2 + P3 + P4
-    if TRY == PASS:
-        print("Passed all {} GameContext tests".format(PASS))
+def main():
+    """
+    Run all unit-test cases and print out summary of results
+    """
+    (t_1, p_1) = member_tests()
+    (t_2, p_2) = npc_tests()
+    (t_3, p_3) = get_tests()
+    (t_4, p_4) = search_tests()
+    tried = t_1 + t_2 + t_3 + t_4
+    passed = p_1 + p_2 + p_3 + p_4
+    if tried == passed:
+        print("Passed all {} GameContext tests".format(passed))
     else:
-        print("FAILED {}/{} GameContext tests".format(TRY-PASS, TRY))
+        print("FAILED {}/{} GameContext tests".format(tried-passed, tried))
+
+
+if __name__ == "__main__":
+    main()
