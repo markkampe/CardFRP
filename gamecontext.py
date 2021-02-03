@@ -137,7 +137,10 @@ class GameContext(GameObject):
 def member_tests():
     """
     exercise {add,remove}_member and get_party
-
+    - new & empty
+    - add one, add a second
+    - delete the first, add a third
+    - delete the third, delete the second
     """
     a_1 = GameObject("a1")
     a_2 = GameObject("a2")
@@ -222,6 +225,10 @@ def member_tests():
 def npc_tests():
     """
     exercise {add,remove}_npc and get_npcs
+    - new & empty
+    - add one, add a second
+    - delete the first, add a third
+    - delete the third, delete the second
     """
     a_1 = GameObject("a1")
     a_2 = GameObject("a2")
@@ -313,6 +320,14 @@ def npc_tests():
 def get_tests():
     """
     exercise hierarchical gets
+
+    set distinct and overlapping properties at various levels of nested
+    GameContexts, and see which values are returned from gets in
+    different levels:
+    - each level has a different value
+    - different levels define different properties
+    - a property in no level will return None
+
     """
     tried = 0
     passed = 0
@@ -373,11 +388,105 @@ def get_tests():
     return (tried, passed)
 
 
+class TestObject(GameObject):
+    """
+    A TestObject is a hidden object that will be found after a
+    specified number of searches.
+    """
+    def __init__(self, name, searches):
+        """
+        a TestObject will be hidden for a specified number of searches,
+        after which it will be found
+
+        @param name: (string) name of the object
+        @param searches: (int) number of searches to find it
+        """
+        super(TestObject, self).__init__(name, "findable object")
+        self.set("RESISTANCE.SEARCH", searches)
+        self.set("SEARCHES", 0)
+
+    def accept_action(self, action, actor, context):
+        """
+        receive and process the effects of an action
+
+        The only verb supported by this test class is SEARCH,
+        which will succeed after a specified number of tries
+
+        @param action: GameAction being performed
+        @param actor: GameActor initiating the action
+        @param context: GameContext in which the action is happening
+
+        @return: (boolean success, string description of the effect)
+        """
+        if action.verb != "SEARCH":
+            return (False, "Unsupported action")
+
+        resistance = self.get("RESISTANCE.SEARCH")
+        searches = self.get("SEARCHES") + 1
+        self.set("SEARCHES", searches)
+
+        if searches >= resistance:
+            return (True, self.name)
+        return (False, "!" + self.name)
+
+
 def search_tests():
     """
     exercise search for hidden objects
+    - create a context with one non-hidden and three hidden test objects
+    - the test objects will be discovered after 1, 2, and 3 searches
+    - do three searches and confirm the right objects found by each
     """
-    return (1, 1)
+    cxt = GameContext("searchable")
+
+    # create three test objects w/different degrees of hiddenness
+    o_1 = TestObject("one", 1)
+    o_1.set("RESISTANCE.SEARCH", 1)
+    cxt.add_object(o_1)
+    o_2 = TestObject("two", 2)
+    o_2.set("RESISTANCE.SEARCH", 2)
+    cxt.add_object(o_2)
+    o_3 = TestObject("three", 3)
+    o_3.set("RESISTANCE.SEARCH", 3)
+    cxt.add_object(o_3)
+
+    # create a (verb only) search action
+    search = GameObject("SEARCH OPERATION")
+    search.verb = "SEARCH"
+
+    tried = 0
+    passed = 0
+
+    print("first search for (singly hidden object) " + o_1.name)
+    (success, descr) = cxt.accept_action(search, None, cxt)
+    tried += 2
+    assert success, "first SEARCH failed"
+    found = descr.replace('\n', ' ').split()
+    assert found == ['one', '!two', '!three'], \
+        "first search returned " + descr
+    passed += 2
+
+    print("second search for (doubly hidden object) " + o_2.name)
+    (success, descr) = cxt.accept_action(search, None, cxt)
+    tried += 2
+    assert success, "second SEARCH failed"
+    found = descr.replace('\n', ' ').split()
+    assert found == ['one', 'two', '!three'], \
+        "first search returned " + descr
+    passed += 2
+
+    print("third search for (tripply hidden object) " + o_3.name)
+    (success, descr) = cxt.accept_action(search, None, cxt)
+    tried += 2
+    assert success, "third SEARCH failed"
+    found = descr.replace('\n', ' ').split()
+    assert found == ['one', 'two', 'three'], \
+        "third search returned " + descr
+    passed += 2
+
+    print()
+
+    return (tried, passed)
 
 
 def main():
