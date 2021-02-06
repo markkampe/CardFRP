@@ -137,10 +137,10 @@ class GameContext(GameObject):
 def member_tests():
     """
     exercise {add,remove}_member and get_party
-    - new & empty
-    - add one, add a second
-    - delete the first, add a third
-    - delete the third, delete the second
+     - new & empty
+     - add one, add a second
+     - delete the first, add a third
+     - delete the third, delete the second
     """
     a_1 = GameObject("a1")
     a_2 = GameObject("a2")
@@ -225,10 +225,10 @@ def member_tests():
 def npc_tests():
     """
     exercise {add,remove}_npc and get_npcs
-    - new & empty
-    - add one, add a second
-    - delete the first, add a third
-    - delete the third, delete the second
+     - new & empty
+     - add one, add a second
+     - delete the first, add a third
+     - delete the third, delete the second
     """
     a_1 = GameObject("a1")
     a_2 = GameObject("a2")
@@ -324,9 +324,9 @@ def get_tests():
     set distinct and overlapping properties at various levels of nested
     GameContexts, and see which values are returned from gets in
     different levels:
-    - each level has a different value
-    - different levels define different properties
-    - a property in no level will return None
+     - each level has a different value
+     - different levels define different properties
+     - a property in no level will return None
 
     """
     tried = 0
@@ -433,9 +433,9 @@ class TestObject(GameObject):
 def search_tests():
     """
     exercise search for hidden objects
-    - create a context with one non-hidden and three hidden test objects
-    - the test objects will be discovered after 1, 2, and 3 searches
-    - do three searches and confirm the right objects found by each
+     - create a context with one non-hidden and three hidden test objects
+     - the test objects will be discovered after 1, 2, and 3 searches
+     - do three searches and confirm the right objects found by each
     """
     cxt = GameContext("searchable")
 
