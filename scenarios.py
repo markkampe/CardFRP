@@ -137,11 +137,11 @@ def main():
         else:
             print("    {} is dead".format(npc.name))
 
-    # TEST A SCROLL OF CURE LIGHT WOUNDS
-    scroll = actor.get_object("CLW")
+    # TEST A POTION OF CURE LIGHT WOUNDS
+    potion = actor.get_object("CLW")
 
-    print("\nHero reads " + str(scroll))
-    clw = scroll.possible_actions(actor, local)[0]
+    print("\nHero drinks " + str(potion))
+    clw = potion.possible_actions(actor, local)[0]
     (_, desc) = clw.act(actor, actor, local)
     print("    " + desc)
     print("    {} now has {} LIFE".format(actor.name, actor.get("LIFE")))
