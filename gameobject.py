@@ -152,14 +152,13 @@ class GameObject(Base):
                 max_hp = int(self.get("HP"))
                 if have + sign * received > max_hp:
                     have = max_hp - received
-            self.set(action.verb, have + sign * received)
+            self.set(action.verb, have + (sign * received))
 
         # return <whether or not any succeed, accumulated results>
         return (received > 0,
                 "{} resists {}/{} stacks of {} from {} in {}"
                 .format(self.name, incoming - received, incoming,
-                        action.verb if sign > 0
-                        else "(negative) " + action.verb,
+                        ("(negative) " if sign < 0 else "") + action.verb,
                         actor, context))
 
     # pylint: disable=unused-argument; sub-classes are likely to use them
@@ -626,17 +625,163 @@ def compound_test():
     print("test #4e: {} {} ... \n\tPOWER, STACKS - CORRECT".
           format(obj.name, action.verb))
 
+    return (tried, passed)
+
+
+def accept_test():
+    """
+    tests for (non-ATTACK) accept_action()
+    """
+    tried = 0
+    passed = 0
+
+    # create the initiator, recipient, and context
+    initiator = GameObject("tester")    # won't need any GameActor functions
+    target = GameObject("target")
+    arena = GameObject("arena")         # won't need any GameCOntext functions
+
+    # STACKS get through in proportion to TO_HIT - RESISTANCE
+    action = GameAction(initiator, "50/50")
+    action.set("STACKS", 100)
+    target.set("RESISTANCE", 50)    # half should get through
+    (success, desc) = action.act(initiator, target, arena)
+    tried += 5
+    assert success,\
+        "None of 100 50/50 STACKs got through"
+    passed += 1
+
+    # decode and check the returned status string
+    resisted = int(desc.split()[2].split('/')[0])
+    expect = "{} resists {}/100 stacks of {} from {} in {}".\
+        format(target.name, resisted, action.verb, initiator.name, arena.name)
+    assert desc == expect, \
+        "Successful 50/50 did not return expected result string"
+    passed += 1
+
+    # confirm a reasonable number of stacks got through
+    assert resisted >= 35, \
+        "too few 50/50 STACKS got through"
+    assert resisted <= 64, \
+        "too many 50/50 STACKS got through"
+    attribute = target.get(action.verb)
+    assert attribute == (100 - resisted), \
+        "target's {} does not reflect correct 100-{}". \
+        format(action.verb, resisted)
+    passed += 3
+
+    print("test #5a: {} resists {}/100 STACKS of {} ... \n\t{}.{} 100 -> {}".
+          format(target.name, resisted, action.verb, target.name,
+                 action.verb, attribute))
+
+    # confirm that negative stacks also get through
+    action = GameAction(initiator, "SURE-THING")
+    action.set("STACKS", -50)
+    target.set("RESISTANCE", 0)     # no resistance
+    target.set(action.verb, 100)    # initial value
+    (success, desc) = action.act(initiator, target, arena)
+    tried += 4
+    assert success, \
+        "{} action failed".format(action.verb)
+
+    resisted = int(desc.split()[2].split('/')[0])
+    expect = "{} resists {}/50 stacks of (negative) {} from {} in {}".\
+        format(target.name, resisted, action.verb, initiator.name, arena.name)
+    assert desc == expect, \
+        "Successful SURE-THING did not return expected result string"
+    assert resisted == 0, \
+        "{} resists {} STACKS of {}".format(target.name, resisted, action.verb)
+
+    attribute = target.get(action.verb)
+    assert attribute == (100 - 50), \
+        "100 - 50 STACKS of {} -> {}".format(action.verb, attribute)
+    passed += 4
+
+    print("test #5b: {} delivers -50 STACKS of {} ... \n\t{}.{} 100 -> {}".
+          format(initiator.name, action.verb, target.name, action.verb,
+                 attribute))
+
+    # adequate RESISTANCE is total protection
+    target.set("RESISTANCE", 100)
+    action = GameAction(initiator, "BASE-RESISTED-ACTION")
+    action.set("STACKS", 100)
+    (success, desc) = action.act(initiator, target, arena)
+    tried += 3
+    assert not success, \
+        "{} action succeeded".format(action.verb)
+    assert desc == "{} resists {} {}". \
+        format(target.name, initiator.name, action.verb), \
+        "{} action does not return correct failure message".format(action.verb)
+    assert target.get(action.verb) is None, \
+        "target property was set by failed {} action".format(action.verb)
+    passed += 3
+
+    print("test #5c: {} delivers 100 STACKS of {} ... \n\t{}".
+          format(initiator.name, action.verb, desc))
+
+    # adequate RESISTANCE.verb is total protection
+    target.set("RESISTANCE", None)
+    target.set("RESISTANCE.VERB-RESISTED-ACTION", 100)
+    action = GameAction(initiator, "VERB-RESISTED-ACTION")
+    action.set("STACKS", 100)
+    (success, desc) = action.act(initiator, target, arena)
+    tried += 3
+    assert not success, \
+        "{} action succeeded".format(action.verb)
+    assert desc == "{} resists {} {}". \
+        format(target.name, initiator.name, action.verb), \
+        "{} action does not return correct failure message".format(action.verb)
+    assert target.get(action.verb) is None, \
+        "target property was set by failed {} action".format(action.verb)
+    passed += 3
+
+    print("test #5d: {} delivers 100 STACKS of {} ... \n\t{}".
+          format(initiator.name, action.verb, desc))
+
+    # adequate RESISTANCE.verb.subtype is total protection
+    target.set("RESISTANCE.VERB-RESISTED-ACTION", None)
+    target.set("RESISTANCE.RESISTED-ACTION.SUBTYPE", 100)
+    action = GameAction(initiator, "RESISTED-ACTION.SUBTYPE")
+    action.set("STACKS", 100)
+    (success, desc) = action.act(initiator, target, arena)
+    tried += 3
+    assert not success, \
+        "{} action succeeded".format(action.verb)
+    assert desc == "{} resists {} {}". \
+        format(target.name, initiator.name, action.verb), \
+        "{} action does not return correct failure message".format(action.verb)
+    assert target.get(action.verb) is None, \
+        "target property was set by failed {} action".format(action.verb)
+    passed += 3
+
+    print("test #5e: {} delivers 100 STACKS of {} ... \n\t{}".
+          format(initiator.name, action.verb, desc))
+
+    target.set("RESISTANCE.RESISTED-ACTION.SUBTYPE", None)
+
+    # LIFE cannot be increased beyond HP
+    target.set("RESISTANCE.RESISTED-ACTION.SUBTYPE", None)
+    target.set("LIFE", 25)
+    target.set("HP", 50)
+    action = GameAction(initiator, "LIFE")
+    action.set("STACKS", 100)
+    (success, desc) = action.act(initiator, target, arena)
+    tried += 3
+    assert success, \
+        "sure thing {} did not succeed".format(action.verb)
+    life = target.get(action.verb)
+    assert life <= target.get("HP"), \
+        "{} raised above HP {}".format(action.verb, target.get("HP"))
+    assert life == target.get("HP"), \
+        "25/50 + 100 STACKS of {} -> {}".format(action.verb, life)
+    passed += 3
+
+    print("test #5f: 25/50 + 100 STACKS of {} ... \n\t{}.{} 25 -> {}".
+          format(action.verb, target.name, action.verb, life))
+
     print()
     return (tried, passed)
 
 
-# TODO test cases for accept_action
-#   resistance (baser, verb, subtype) summation
-#   proper rolls against TO_HIT vs RESISTANCE
-#   correct return of success
-#   correct return of delivered stacks
-#   life cannot be raised above HP
-#
 def main():
     """
     Run all unit-test cases and print out summary of results
@@ -644,8 +789,9 @@ def main():
     (t_1, p_1) = action_test()
     (t_2, p_2) = weapon_test()
     (t_3, p_3) = compound_test()
-    tried = t_1 + t_2 + t_3
-    passed = p_1 + p_2 + p_3
+    (t_4, p_4) = accept_test()
+    tried = t_1 + t_2 + t_3 + t_4
+    passed = p_1 + p_2 + p_3 + p_4
     if tried == passed:
         print("Passed all {} GameObject tests".format(passed))
     else:
