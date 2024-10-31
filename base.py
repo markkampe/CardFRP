@@ -2,7 +2,7 @@
 """ This module implements the base class for almost everything"""
 
 
-class Base(object):
+class Base():
     """
     This is the base class for all other classes
 
@@ -27,7 +27,8 @@ class Base(object):
         """
         if self.description is None:
             return self.name
-        return "{}({})".format(self.name, self.description)
+        #return "{}({})".format(self.name, self.description)
+        return f"{self.name}({self.description})"
 
     def get(self, attribute):
         """
@@ -64,8 +65,7 @@ def main():
     passed = 0
 
     # new object has name, description, and nothing else
-    print("Created 'Base 1', descr={}\n    got '{}'"
-          .format(describe, str(go1)))
+    print(f"Created 'Base 1', descr={describe}\n    got '{str(go1)}'")
     tried += 2
     assert (go1.name == "Base Object 1"), \
         "New object does not have assigned name"
@@ -74,30 +74,28 @@ def main():
     passed += 2
 
     # a new set correctly adds a value
-    print("    before set(): get('attribute#1') -> {}"
-          .format(go1.get("attribute#1")))
+    print(f"    before set(): get('attribute#1') -> {go1.get('attribute#1')}")
     tried += 2
     assert (go1.get("attribute#1") is None), \
         "New object has attribute values before set"
     go1.set("attribute#1", "value1")
-    print("    after set('attribute#1', 'value1'): get('attribute#1') -> '{}'"
-          .format(go1.get("attribute#1")))
+    print("    after set('attribute#1', 'value1'): get('attribute#1') -> "
+          f"'{go1.get('attribute#1')}'")
     assert (go1.get("attribute#1") == "value1"), \
         "set does not correctly set new value"
     passed += 2
 
     # a second set correctly changes a value
     go1.set("attribute#1", "value2")
-    print("    after set('attribute#1', 'value2'): get('attribute#1') -> '{}'"
-          .format(go1.get("attribute#1")))
+    print("    after set('attribute#1', 'value2'): get('attribute#1') -> "
+          f"'{go1.get('attribute#1')}'")
     tried += 1
     assert (go1.get("attribute#1") == "value2"), \
         "set does not correctly change value"
     passed += 1
 
     # description defaults to None
-    print("Created 'Base Object 2, descr=None\n    got '{}'"
-          .format(str(go2)))
+    print(f"Created 'Base Object 2, descr=None\n    got '{str(go2)}'")
     tried += 2
     assert (go2.name == "Base Object 2"), \
         "New object does not have assigned name"
@@ -107,9 +105,9 @@ def main():
 
     print()
     if tried == passed:
-        print("Passed all {} Base tests".format(passed))
+        print(f"Passed all {passed} Base tests")
     else:
-        print("FAILED {}/{} Base tests".format(tried-passed, tried))
+        print(f"FAILED {tried-passed}/{tried} Base tests")
 
 
 if __name__ == "__main__":
