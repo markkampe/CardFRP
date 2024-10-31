@@ -16,7 +16,7 @@ class GameContext(GameObject):
         @param name: display name of this object
         @param descr: human description of this object
         """
-        super(GameContext, self).__init__(name, descr)
+        super().__init__(name, descr)
         self.parent = parent
         self.party = []
         self.npcs = []
@@ -33,7 +33,7 @@ class GameContext(GameObject):
         """
         if attribute in self.attributes:
             return self.attributes[attribute]
-        elif self.parent is not None:
+        if self.parent is not None:
             return self.parent.get(attribute)
         return None
 
@@ -48,7 +48,7 @@ class GameContext(GameObject):
         @return: list of possible GameActions
         """
         # default: return our parent's list of possible_actions
-        actions = super(GameContext, self).possible_actions(actor, context)
+        actions = super().possible_actions(actor, context)
         return actions
 
     def accept_action(self, action, actor, context):
@@ -84,8 +84,7 @@ class GameContext(GameObject):
             return (found_stuff, result)
 
         # if we don't recognize this action, pass it up the chain
-        return super(GameContext, self).accept_action(action,
-                                                      actor, context)
+        return super().accept_action(action, actor, context)
 
     def get_party(self):
         """
@@ -401,7 +400,7 @@ class TestObject(GameObject):
         @param name: (string) name of the object
         @param searches: (int) number of searches to find it
         """
-        super(TestObject, self).__init__(name, "findable object")
+        super().__init__(name, "findable object")
         self.set("RESISTANCE.SEARCH", searches)
         self.set("SEARCHES", 0)
 
@@ -500,9 +499,9 @@ def main():
     tried = t_1 + t_2 + t_3 + t_4
     passed = p_1 + p_2 + p_3 + p_4
     if tried == passed:
-        print("Passed all {} GameContext tests".format(passed))
+        print(f"Passed all {passed} GameContext tests")
     else:
-        print("FAILED {}/{} GameContext tests".format(tried-passed, tried))
+        print(f"FAILED {tried-passed}/{tried} GameContext tests")
 
 
 if __name__ == "__main__":
