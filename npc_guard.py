@@ -166,7 +166,7 @@ def test_target():
     tried += 1
     (_, desc) = good_guy.take_turn()
     print(desc)
-    assert "guard #1 counter-attacks thug #1" in desc,\
+    assert "guard #1 counter-attacks thug #1" in desc, \
         "after being attacked, guard's turn is not counter-attack"
     passed += 1
 
@@ -225,7 +225,7 @@ def test_reinforcements():
     tried += 1
     (_, desc) = helper.take_turn()
     print(desc)
-    assert "{} counter-attacks thug #1".format(helper.name) in desc,\
+    assert "{} counter-attacks thug #1".format(helper.name) in desc, \
         "after being attacked, guard's turn is not counter-attack"
     passed += 1
 

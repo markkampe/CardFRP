@@ -646,7 +646,7 @@ def accept_test():
     target.set("RESISTANCE", 50)    # half should get through
     (success, desc) = action.act(initiator, target, arena)
     tried += 5
-    assert success,\
+    assert success, \
         "None of 100 50/50 STACKs got through"
     passed += 1
 

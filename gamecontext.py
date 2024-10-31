@@ -81,7 +81,7 @@ class GameContext(GameObject):
                         result = descr
                     else:
                         result += "\n    " + descr
-            return(found_stuff, result)
+            return (found_stuff, result)
 
         # if we don't recognize this action, pass it up the chain
         return super(GameContext, self).accept_action(action,
@@ -161,7 +161,7 @@ def member_tests():
     party = cxt.get_party()
     tried += 2
     assert len(party) == 1, "after adding first party member, len != 1"
-    assert a_1 in party,\
+    assert a_1 in party, \
         "after adding first party member, he is not in the party"
     passed += 2
 
@@ -170,9 +170,9 @@ def member_tests():
     party = cxt.get_party()
     tried += 3
     assert len(party) == 2, "after adding second party member, len != 2"
-    assert a_1 in party,\
+    assert a_1 in party, \
         "after adding second party member, first is no longer there"
-    assert a_2 in party,\
+    assert a_2 in party, \
         "after adding second party member, he is not there"
     passed += 3
 
@@ -181,9 +181,9 @@ def member_tests():
     party = cxt.get_party()
     tried += 3
     assert len(party) == 1, "after removing first party member, len != 1"
-    assert a_1 not in party,\
+    assert a_1 not in party, \
         "after removing first party member, he is still there"
-    assert a_2 in party,\
+    assert a_2 in party, \
         "after removing first party member, second is no longer there"
     passed += 3
 
@@ -192,7 +192,7 @@ def member_tests():
     party = cxt.get_party()
     tried += 3
     assert len(party) == 2, "after adding another party member, len != 2"
-    assert a_2 in party,\
+    assert a_2 in party, \
         "after adding another party member, previous is no longer there"
     assert a_3 in party, "after adding another party member, he is not there"
     passed += 3
@@ -202,9 +202,9 @@ def member_tests():
     party = cxt.get_party()
     tried += 3
     assert len(party) == 1, "after removing another party member, len != 1"
-    assert a_3 not in party,\
+    assert a_3 not in party, \
         "after removing another party member, he is still there"
-    assert a_2 in party,\
+    assert a_2 in party, \
         "after removing another party member, second is no longer there"
     passed += 3
 
@@ -213,7 +213,7 @@ def member_tests():
     party = cxt.get_party()
     tried += 2
     assert not party, "after removing final party member, len != 0"
-    assert a_2 not in party,\
+    assert a_2 not in party, \
         "after removing final party member, he is still there"
     passed += 2
 

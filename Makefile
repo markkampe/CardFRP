@@ -26,8 +26,8 @@ doc:
 
 DISABLES= --disable=duplicate-code --disable=fixme
 lint:
-	pylint3 $(DISABLES) $(ALL)
-	pep8 $(ALL)
+	pycodestyle $(ALL)
+	pylint $(DISABLES) $(ALL)
 
 clean:
 	-rm -f *.pyc
