@@ -18,7 +18,7 @@ class NPC_guard(GameActor):
         @param name: display name of this object
         @param descr: human description of this object
         """
-        super(NPC_guard, self).__init__(name, descr)
+        super().__init__(name, descr)
         self.context = None
 
         # default attributes ... easily changed after instantiation
@@ -56,8 +56,7 @@ class NPC_guard(GameActor):
         self.context = context
 
         # start with standard GameActor responses
-        (hit, desc) = super(NPC_guard, self).accept_action(action,
-                                                           actor, context)
+        (hit, desc) = super().accept_action(action, actor, context)
 
         # figure out the action verb and sub-type
         if '.' in action.verb:
@@ -97,11 +96,10 @@ class NPC_guard(GameActor):
             attack = actions[randint(0, len(actions)-1)]
             (success, desc) = self.take_action(actions[0], self.target)
             return (success,
-                    "\n{} uses {} to {} {}, delivered={}\n    {}"
-                    .format(self.name, weapon.name, attack.verb,
-                            self.target.name, attack.get("HIT_POINTS"),
-                            desc))
-        return super(NPC_guard, self).take_turn()
+                    f"\n{self.name} uses {weapon.name} to {attack.verb}"
+                    f"{self.target.name}"
+                    f", delivered={attack.get('HIT_POINTS')}\n    {desc}")
+        return super().take_turn()
 
 
 # UNIT TESTING
@@ -116,7 +114,7 @@ class NoGoodNick(GameActor):
         """
 
         # create a bad-guy brawler
-        super(NoGoodNick, self).__init__(name, "test aggressor")
+        super().__init__(name, "test aggressor")
         self.set("HP", 16)
         self.set("LIFE", 16)
         self.set("ACCURACY", 10)
@@ -133,7 +131,7 @@ class NoGoodNick(GameActor):
         @param context: GameContext in which action is being taken
         @return: (boolean success, string description of the effect)
         """
-        return (True, "{} counter-attacks {}".format(actor.name, self.name))
+        return (True, f"{actor.name} counter-attacks {self.name}")
 
 
 def test_target():
@@ -151,15 +149,13 @@ def test_target():
 
     # thug attacks the guard
     tried += 1
-    print("{} {}s {} in {}".
-          format(bad_guy.name, assault.verb, good_guy.name, cxt.name))
+    print(f"{bad_guy.name} {assault.verb}s {good_guy.name} in {cxt.name}")
     (_, desc) = assault.act(bad_guy, good_guy, cxt)
     print(desc)
 
     # confirm guard knows who attacked him
     assert good_guy.target is bad_guy, \
-        "after being attacked, {} does not target {}"\
-        .format(good_guy.name, bad_guy.name)
+        f"after being attacked, {good_guy.name} does not target {bad_guy.name}"
     passed += 1
 
     # confirm guard's next turn counter-attacks his attacker
@@ -192,8 +188,7 @@ def test_reinforcements():
     passed = 0
 
     # thug attacks the guard
-    print("{} {}s {} in {}".
-          format(bad_guy.name, assault.verb, good_guy.name, cxt.name))
+    print(f"{bad_guy.name} {assault.verb}s {good_guy.name} in {cxt.name}")
     (_, desc) = assault.act(bad_guy, good_guy, cxt)
     print(desc)
 
@@ -211,21 +206,20 @@ def test_reinforcements():
             helper = npc
 
     assert helper is not None, \
-        "Nobody but {} in context".format(good_guy.name)
+        f"Nobody but {good_guy.name} in context"
     passed += 1
 
     # confirm helper knows who the enemy is
     tried += 1
     assert helper.target is bad_guy, \
-        "after coming to assist, {} does not target {}"\
-        .format(helper.name, bad_guy.name)
+        f"after coming to assist, {helper.name} does not target {bad_guy.name}"
     passed += 1
 
     # confirm helper attacks the thug on his next turn
     tried += 1
     (_, desc) = helper.take_turn()
     print(desc)
-    assert "{} counter-attacks thug #1".format(helper.name) in desc, \
+    assert f"{helper.name} counter-attacks thug #1" in desc, \
         "after being attacked, guard's turn is not counter-attack"
     passed += 1
 
@@ -242,9 +236,10 @@ def main():
     tried = t_1 + t_2
     passed = p_1 + p_2
     if tried == passed:
-        print("Passed all {} NPC_guard tests".format(passed))
+        print(f"Passed all {passed} NPC_guard tests")
     else:
-        print("FAILED {}/{} GameNPC_guard tests".format(tried-passed, tried))
+        missed = tried - passed
+        print(f"FAILED {missed}/{tried} GameNPC_guard tests")
 
 
 if __name__ == "__main__":
