@@ -18,7 +18,7 @@ class GameActor(GameObject):
         @param name: display name of this actor
         @param descr: human description of this actor
         """
-        super(GameActor, self).__init__(name, descr)
+        super().__init__(name, descr)
         self.context = None
         self.alive = True
         self.incapacitated = False
@@ -44,8 +44,8 @@ class GameActor(GameObject):
         # see if EVASION+D100 can beat the incoming TO_HIT
         to_hit = action.get("TO_HIT") - evasion
         if to_hit < 100 and randint(1, 100) > to_hit:
-            return (False, "{} evades {} {}"
-                    .format(self.name, action.source.name, action.verb))
+            return (False,
+                    f"{self.name} evades {action.source.name} {action.verb}")
 
         # get the recipient's base and sub-class PROTECTION
         prot = self.get("PROTECTION")
@@ -58,8 +58,9 @@ class GameActor(GameObject):
         # see if PROTECTION can absorb all the incoming HIT_POINTS
         delivered = action.get("HIT_POINTS")
         if protection >= delivered:
-            return (False, "{}'s protection absorbs all damage from {}"
-                    .format(self.name, action.verb))
+            return (False,
+                    f"{self.name}'s protection absorbs all damage from"
+                    f" {action.verb}")
 
         # subtract received HIT_POINTS from our LIFE
         old_hp = self.get("LIFE")
@@ -68,12 +69,11 @@ class GameActor(GameObject):
         new_hp = old_hp - (delivered - protection)
         self.set("LIFE", new_hp)
 
-        result = "{} hit by {} from {} using {} for {}-{} life-points in {}" \
-                 .format(self.name, action.verb, actor.name,
-                         action.source.name,
-                         delivered, protection, context.name) \
-                 + "\n    {} life: {} - {} = {}" \
-                 .format(self.name, old_hp, delivered - protection, new_hp)
+        taken = delivered - protection
+        result = f"{self.name} hit by {action.verb} from {actor.name}" +\
+                 f" using {action.source.name} for {delivered}-{protection}" +\
+                 f" life-points in {context.name}" +\
+                 f"\n    {self.name} life: {old_hp} - {taken} = {new_hp}"
 
         # if LIFE<=0 we are incapacitated, and no longer alive
         if new_hp <= 0:
@@ -109,7 +109,7 @@ class GameActor(GameObject):
             return self._accept_attack(action, actor, context)
 
         # otherwise let our (GameObject) super-class handle it
-        return super(GameActor, self).accept_action(action, actor, context)
+        return super().accept_action(action, actor, context)
 
     def interact(self, actor):
         """
@@ -181,13 +181,11 @@ def simple_attack_tests():
     action = GameAction(source, "ATTACK")
     action.set("ACCURACY", -100)
     action.set("DAMAGE", "1")
-    print("{} tries to {} {} with {}".
-          format(attacker, action, target, source))
+    print("{attacker} tries to {action} {target} with {source}")
     (_, desc) = action.act(attacker, target, context)
     tried += 1
     assert target.get("LIFE") == 10, \
-        "{} took damage, LIFE: {} -> {}". \
-        format(target, 10, target.get("LIFE"))
+        f"{target} took damage, LIFE: {10} -> {target.get('LIFE')}"
     passed += 1
     print("    " + desc)
     print()
@@ -197,13 +195,11 @@ def simple_attack_tests():
     action = GameAction(source, "ATTACK")
     action.set("ACCURACY", 100)
     action.set("DAMAGE", "1")
-    print("{} tries to {} {} with {}".
-          format(attacker, action, target, source))
+    print(f"{attacker} tries to {action} {target} with {source}")
     tried += 1
     (_, desc) = action.act(attacker, target, context)
     assert target.get("LIFE") == 9, \
-        "{} took incorrect damage, LIFE: {} -> {}". \
-        format(target, 10, target.get("LIFE"))
+        f"{target} took incorrect damage, LIFE: {10} -> {target.get('LIFE')}"
     passed += 1
     print("    " + desc)
     print()
@@ -215,13 +211,11 @@ def simple_attack_tests():
     action.set("DAMAGE", "1")
     target.set("EVASION", 100)
     target.set("LIFE", 10)
-    print("{} tries to {} {} with {}".
-          format(attacker, action, target, source))
+    print(f"{attacker} tries to {action} {target} with {source}")
     tried += 1
     (_, desc) = action.act(attacker, target, context)
     assert target.get("LIFE") == 10, \
-        "{} took damage, LIFE: {} -> {}". \
-        format(target, 10, target.get("LIFE"))
+        f"{target} took incorrect damage, LIFE: {10} -> {target.get('LIFE')}"
     passed += 1
     print("    " + desc)
     print()
@@ -234,13 +228,11 @@ def simple_attack_tests():
     target.set("EVASION", 0)
     target.set("LIFE", 10)
     target.set("PROTECTION", 1)
-    print("{} tries to {} {} with {}".
-          format(attacker, action, target, source))
+    print(f"{attacker} tries to {action} {target} with {source}")
     tried += 1
     (_, desc) = action.act(attacker, target, context)
     assert target.get("LIFE") == 10, \
-        "{} took damage, LIFE: {} -> {}". \
-        format(target, 10, target.get("LIFE"))
+        f"{target} took incorrect damage, LIFE: {10} -> {target.get('LIFE')}"
     passed += 1
     print("    " + desc)
     print()
@@ -268,13 +260,11 @@ def sub_attack_tests():
     target.set("EVASION", 50)
     target.set("EVASION.subtype", 50)
 
-    print("{} tries to {} {} with {}".
-          format(attacker, action, target, source))
+    print(f"{attacker} tries to {action} {target} with {source}")
     (_, desc) = action.act(attacker, target, context)
     tried += 1
     assert target.get("LIFE") == 10, \
-        "{} took damage, LIFE: {} -> {}". \
-        format(target, 10, target.get("LIFE"))
+        f"{target} took incorrect damage, LIFE: {10} -> {target.get('LIFE')}"
     passed += 1
     print("    " + desc)
 
@@ -290,13 +280,11 @@ def sub_attack_tests():
     target.set("PROTECTION", 1)
     target.set("PROTECTION.subtype", 1)
 
-    print("{} tries to {} {} with {}".
-          format(attacker, action, target, source))
+    print(f"{attacker} tries to {action} {target} with {source}")
     (_, desc) = action.act(attacker, target, context)
     tried += 1
     assert target.get("LIFE") == 8, \
-        "{} took damage, LIFE: {} -> {}". \
-        format(target, 8, target.get("LIFE"))
+        f"{target} took incorrect damage, LIFE: {8} -> {target.get('LIFE')}"
     passed += 1
     print("    " + desc)
     print()
@@ -321,15 +309,15 @@ def random_attack_tests():
     target.set("PROTECTION", 0)
     rounds = 10
     for _ in range(rounds):
-        print("{} tries to {} {} with {}".
-              format(attacker, action, target, source))
+        print(f"{attacker} tries to {action} {target} with {source}")
         (_, desc) = action.act(attacker, target, context)
         print("    " + desc)
 
     life = target.get("LIFE")
-    assert life < 10, "{} took no damage in {} rounds".format(target, rounds)
-    assert life > 10 - rounds, "{} took damage every round".format(target)
-    print("{} was hit {} times in {} rounds".format(target, 10 - life, rounds))
+    assert life < 10, "{target} took no damage in {roudns} rounds"
+    assert life > 10 - rounds, "{target} took damage every round"
+    remain = 10 - life
+    print(f"{target} was hit {remain} times in {rounds} rounds")
     print()
     return (2, 2)
 
@@ -350,15 +338,12 @@ def simple_condition_tests():
     action = GameAction(source, "MENTAL.CONDITION-1")
     action.set("POWER", -100)
     action.set("STACKS", "10")
-    print("{} tries to {} {} with {}".
-          format(sender, action, target, source))
+    print(f"{sender} tries to {action} {target} with {context}")
     (success, desc) = action.act(sender, target, context)
     assert not success, \
-        "{} was successful against {}".\
-        format(action.verb, target)
+        f"{action.verb} was successful against {target}"
     assert target.get(action.verb) is None, \
-        "{} RECEIVED {}={}". \
-        format(target, action.verb, target.get(action.verb))
+        f"{target} RECEIVED {action.verb}={target.get(action.verb)}"
     print("    " + desc)
     tried += 2
     passed += 2
@@ -368,15 +353,12 @@ def simple_condition_tests():
     action = GameAction(source, "MENTAL.CONDITION-2")
     action.set("POWER", 0)
     action.set("STACKS", "10")
-    print("{} tries to {} {} with {}".
-          format(sender, action, target, source))
+    print(f"{sender} tries to {action} {target} with {source}")
     (success, desc) = action.act(sender, target, context)
     assert success, \
-        "{} was unsuccessful against {}".\
-        format(action.verb, target)
+        f"{action.verb} was unsuccessful against {target}"
     assert target.get(action.verb) == 10, \
-        "{} RECEIVED {}={}". \
-        format(target, action.verb, target.get(action.verb))
+        f"{target} RECEIVED {action.verb}={target.get(action.verb)}"
     print("    " + desc)
     tried += 2
     passed += 2
@@ -387,15 +369,12 @@ def simple_condition_tests():
     action.set("POWER", 0)
     action.set("STACKS", "10")
     target.set("RESISTANCE.MENTAL", 100)
-    print("{} tries to {} {} with {}".
-          format(sender, action, target, source))
+    print(f"{sender} tries to {action} {target} with {source}")
     (success, desc) = action.act(sender, target, context)
     assert not success, \
-        "{} was successful against {}".\
-        format(action.verb, target)
+        f"{action.verb} was successful against {target}"
     assert target.get(action.verb) is None, \
-        "{} RECEIVED {}={}". \
-        format(target, action.verb, target.get(action.verb))
+        f"{target} RECEIVED {action.verb}={target.get(action.verb)}"
     print("    " + desc)
     tried += 2
     passed += 2
@@ -419,15 +398,12 @@ def sub_condition_tests():
     action.set("STACKS", "10")
     target.set("RESISTANCE.MENTAL", 50)
     target.set("RESISTANCE.MENTAL.CONDITION-4", 50)
-    print("{} tries to {} {} with {}".
-          format(sender, action, target, source))
+    print(f"{sender} tries to {action} {target} with {source}")
     (success, desc) = action.act(sender, target, context)
     assert not success, \
-        "{} was successful against {}".\
-        format(action.verb, target)
+        "{action.verb} was successful against {target}"
     assert target.get(action.verb) is None, \
-        "{} RECEIVED {}={}". \
-        format(target, action.verb, target.get(action.verb))
+        f"{target} RECEIVED {action.verb}={target.get(action.verb)}"
     print("    " + desc)
 
     print()
@@ -451,22 +427,21 @@ def random_condition_tests():
 
     rounds = 5
     for _ in range(rounds):
-        print("{} tries to {} {} with {}".
-              format(sender, action, target, source))
+        print(f"{sender} tries to {action} {target} with {source}")
         (success, desc) = action.act(sender, target, context)
         assert success, \
-            "none of 10 stacks of {} got through".format(action.verb)
+            f"none of 10 stacks of {action.verb} got through"
         print("    " + desc)
 
     delivered = rounds * 10
     expected = delivered / 2    # TO_HIT=100, RESISTANCE=50
     received = target.get(action.verb)
     assert received > 0.7 * expected, \
-        "{} took {}/{} stacks".format(target, received, delivered)
+        "{target} took {recived}/{delivered} stacks"
     assert received < 1.3 * expected, \
-        "{} took {}/{} stacks". format(target, received, delivered)
-    print("{} took {}/{} stacks (vs {} expected)".
-          format(target, received, delivered, int(expected)))
+        "{target} took {recived}/{delivered} stacks"
+    print(f"{target} took {received}/{delivered} stacks"
+          f" (vs {int(expected)} expected)")
 
     print()
     return (2, 2)
@@ -485,9 +460,10 @@ def main():
     tried = t_1 + t_2 + t_3 + t_4 + t_5 + t_6
     passed = p_1 + p_2 + p_3 + p_4 + p_5 + p_6
     if tried == passed:
-        print("Passed all {} GameActor tests".format(passed))
+        print(f"Passed all {passed} GameActor tests")
     else:
-        print("FAILED {}/{} GameActor tests".format(tried-passed, tried))
+        missed = tried - passed
+        print(f"FAILED {missed}/{tried} GameActor tests")
 
 
 if __name__ == "__main__":
