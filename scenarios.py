@@ -33,8 +33,7 @@ def main():
     village = GameContext("Snaefelness", "village on north end of island")
     local = GameContext(parent=village)
     local.load(CONTEXT_DESCR)
-    print("In the {} in {} ({})\n".
-          format(local.name, village.name, village.description))
+    print(f"In the {local.name} in {village.name} ({village.description})\n")
 
     # create hero and the guard
     actor = GameActor()
@@ -51,25 +50,24 @@ def main():
     party = local.get_party()
     print("    party:")
     for person in party:
-        print("\t{} ... {}".format(person.name, person.description))
+        print(f"\t{person.name} ... {person.description}")
     npcs = local.get_npcs()
     print("\n    NPCs:")
     for person in npcs:
-        print("\t{} ... {}".format(person.name, person.description))
+        print(f"\t{person.name} ... {person.description}")
     stuff = local.get_objects(hidden=True)
     print("\n    undiscovered objects:")
     for thing in stuff:
-        print("\t{} ... {}".format(thing.name, thing.description))
+        print(f"\t{thing.name} ... {thing.description}")
     print()
 
     # TRY CONTEXT AFFORDED ACTIONS, AND SEE WHAT DIFFERNCE THEY MAKE
     actions = local.possible_actions(actor, local)
     for action in actions:
         (_, desc) = actor.take_action(action, local)
-        print("{} tries to {}(power={}) in {}\n"
-              .format(actor.name,
-                      action.verb, actor.get("POWER."+action.verb),
-                      local.name))
+        print(f"{actor.name} tries to {action.verb}"
+              f"(power={actor.get('POWER.'+action.verb)})"
+              f" in {local.name}\n")
 
     stuff = local.get_objects(hidden=True)
     if not stuff:
@@ -77,7 +75,7 @@ def main():
     else:
         print("\nafter which ... undiscovered objects:")
         for thing in stuff:
-            print("\t{} ... {}".format(thing.name, thing.description))
+            print(f"\t{thing.name} ... {thing.description}")
     print()
 
     # PERFORM ALL POSSIBLE INTERACTIONS WITH THE GUARD
@@ -86,18 +84,17 @@ def main():
     for interaction in actions:
         (_, desc) = actor.take_action(interaction, guard)
         verb = interaction.verb
-        print("\n{} uses {} interaction on {}\n    {}"
-              .format(actor.name, verb, guard.name, desc))
-        print("    {}.{} = {}".format(guard.name, verb, guard.get(verb)))
+        print(f"\n{actor.name} uses {verb} interaction on {guard.name}\n"
+              f"    {desc}")
+        print(f"    {guard.name}.{verb} = {guard.get(verb)}")
 
     # TRY PHYSICAL ACTIONS on the guard
     actions = actor.possible_actions(actor, local)
     for action in actions:
         (_, desc) = actor.take_action(action, guard)
         verb = action.verb
-        print("\n{} tries to {} {}\n    {}"
-              .format(actor.name, verb, guard.name, desc))
-        print("    {}.{} = {}".format(guard.name, verb, guard.get(verb)))
+        print(f"\n{actor.name} tries to {verb} {guard.name}\n    {desc}")
+        print(f"    {guard.name}.{verb} = {guard.get(verb)}")
     print()
 
     if args.no_combat:
@@ -112,9 +109,9 @@ def main():
         # choose a random attack
         attack = actions[randint(0, len(actions)-1)]
         (_, desc) = actor.take_action(attack, target)
-        print("\n{} uses {} to {} {}, delivered={}\n    {}"
-              .format(actor.name, weapon.name, attack.verb, target.name,
-                      attack.get("HIT_POINTS"), desc))
+        print(f"\n{actor.name} uses {weapon.name} to {attack.verb}"
+              f"{target.name}, delivered={attack.get('HIT_POINTS')}\n"
+              f"{desc}")
 
         # give each NPC an action and choose a target for nextg round
         target = None
@@ -128,14 +125,14 @@ def main():
 
     # PRINT OUT THE DEATH TOLL
     print("\nAfter the combat:")
-    print("    {} has {} LIFE".format(actor.name, actor.get("LIFE")))
+    print(f"    {actor.name} has {actor.get('LIFE')}")
 
     npcs = local.get_npcs()
     for npc in npcs:
         if npc.alive:
-            print("    {} has {} LIFE".format(npc.name, npc.get("LIFE")))
+            print(f"    {npc.name} has {npc.get('LIFE')}")
         else:
-            print("    {} is dead".format(npc.name))
+            print(f"    {npc.name} is dead")
 
     # TEST A POTION OF CURE LIGHT WOUNDS
     potion = actor.get_object("CLW")
@@ -144,7 +141,7 @@ def main():
     clw = potion.possible_actions(actor, local)[0]
     (_, desc) = clw.act(actor, actor, local)
     print("    " + desc)
-    print("    {} now has {} LIFE".format(actor.name, actor.get("LIFE")))
+    print(f"    {actor.name} now has {actor.get('LIFE')}")
 
     # USE A WEAPON WITH A COMPOUND ATTACK
     dagger = actor.get_object("Dagger")
@@ -161,18 +158,17 @@ def main():
             value = actor.get(atr)
             if value is None:
                 continue
-            print("    {} now has {} of {}".format(actor.name, atr, value))
+            print(f"    {actor.name} now has {atr} of {value}")
 
     # TEST A SCROLL OF COURAGE
     scroll = actor.get_object("Courage")
 
     print()
-    print("{} reads {}".format(actor.name, scroll))
+    print(f"{actor.name} reads {scroll}")
     bold = scroll.possible_actions(actor, local)[0]
     (_, desc) = bold.act(actor, actor, local)
     print("    " + desc)
-    print("    {} now has FEAR of {}".format(actor.name,
-                                             actor.get("MENTAL.FEAR")))
+    print(f"    {actor.name} now has FEAR of {actor.get('MENTAL.FEAR')}")
 
 
 if __name__ == "__main__":
