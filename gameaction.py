@@ -67,8 +67,10 @@ class GameAction(Base):
         return a string representation of our verb and its attributes
         """
         if "ATTACK" in self.verb:
-            return f"{self.verb} (ACCURACY={self.get('ACCURACY')}%, DAMAGE={self.get('DAMAGE')})"
-        return f"{self.verb} (POWER={self.get('POWER')}%, STACKS={self.get('STACKS')})"
+            return (f"{self.verb} (ACCURACY={self.get('ACCURACY')}%"
+                    f", DAMAGE={self.get('DAMAGE')})")
+        return (f"{self.verb} (POWER={self.get('POWER')}%"
+                f", STACKS={self.get('STACKS')})")
 
     # pylint: disable=too-many-locals; I claim I need them all
     def act(self, initiator, target, context):
@@ -333,12 +335,15 @@ class TestRecipient(Base):
         """
         if "ATTACK" in action.verb:
             return (True,
-                    f"{self} receives {action.verb} (TO_HIT={action.get('TO_HIT')}"
-                    f", DAMAGE={action.get('HIT_POINTS')}) from {actor} in {context}")
+                    f"{self} receives {action.verb}"
+                    f" (TO_HIT={action.get('TO_HIT')}"
+                    f", DAMAGE={action.get('HIT_POINTS')})"
+                    f"from {actor} in {context}")
         result = "resists" if action.verb == "FAIL" else "receives"
         return (action.verb != "FAIL",
                 f"{self} {result} {action.verb}"
-                f" (TO_HIT={action.get('TO_HIT')}, STACKS={action.get('TOTAL')})"
+                f" (TO_HIT={action.get('TO_HIT')},"
+                f" STACKS={action.get('TOTAL')})"
                 f" from {actor} in {context}")
 
 
@@ -607,11 +612,10 @@ def compound_verbs():
 
     (success, results) = action.act(lame, victim, context)
     print(results)
-    #FIX
     assert "ATTACK.one (TO_HIT=101, DAMAGE=10)" in results, \
         "ATTACK.one was not correctly passed"
-    #assert "two (TO_HIT=102, STACKS=2)" in results, \
-    #    "MENTAL.two was not correctly passed"
+    assert "two (TO_HIT=102, STACKS=2)" in results, \
+        "MENTAL.two was not correctly passed"
     assert "ATTACK.three (TO_HIT=103, DAMAGE=30)" in results, \
         "ATTACK.three was not correctly passed"
     assert "four (TO_HIT=104, STACKS=4)" in results, \
