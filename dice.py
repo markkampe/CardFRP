@@ -7,7 +7,7 @@ from random import randint
 
 
 # pylint: disable=too-few-public-methods
-class Dice(object):
+class Dice():
     """
     This class supports formula based dice rolls.
     The formulae can be described in a few (fairly standard) formats:
@@ -40,14 +40,14 @@ class Dice(object):
         if isinstance(formula, int):
             self.plus = formula
             return
-        elif not isinstance(formula, str):
+        if not isinstance(formula, str):
             raise ValueError("non-string dice expression")
 
         # if it is just a number, this is simple
         if formula.isnumeric():
             self.plus = int(formula)
             return
-        elif formula[0] == '-' and formula[1:].isnumeric():
+        if formula[0] == '-' and formula[1:].isnumeric():
             self.plus = int(formula)
             return
 
@@ -68,7 +68,7 @@ class Dice(object):
             raise ValueError("unrecognized dice expression")
 
         # process the values
-        if delimiter == 'D' or delimiter == 'd':
+        if delimiter in ('D', 'd'):
             try:
                 self.num_dice = 1 if values[0] == '' else int(values[0])
 
@@ -100,11 +100,11 @@ class Dice(object):
         return string representation of these dice"
         """
         if self.num_dice is not None and self.dice_type is not None:
-            descr = "{}D{}".format(self.num_dice, self.dice_type)
+            descr = f"{self.num_dice}D{self.dice_type}"
             if self.plus > 0:
-                descr += "+{}".format(self.plus)
+                descr += f"+{self.plus}"
         elif self.min_value is not None and self.max_value is not None:
-            descr = "{}-{}".format(self.min_value, self.max_value)
+            descr = f"{self.min_value}-{self.max_value}"
         elif self.plus != 0:
             descr = str(self.plus)
         else:
@@ -152,8 +152,8 @@ def test(formula, min_expected, max_expected, rolls=20):
         result += '"' + formula + '"'
     else:
         result += str(formula)
-    result += " ({}): returns {} values between {} and {}".\
-        format(dice.str(), rolls, min_rolled, max_rolled)
+    result += f" ({dice.str()}): returns"
+    result += f" {rolls} values between {min_rolled} and {max_rolled}"
     print(result)
 
     assert min_rolled >= min_expected, "roll returns below-minimum values"
@@ -209,20 +209,19 @@ def main():
                     "7to9"]:
         tests_run += 1
         try:
-            dice = Dice(formula)
-            sys.stderr.write("    ERROR: illegal formula {} accepted as {}\n".
-                             format(formula, dice.str()))
+            _dice = Dice(formula)
+            sys.stderr.write("    ERROR: illegal formula")
+            sys.stderr.write(f"{formula} accepted as {_dice.str()}\n")
         except ValueError:
-            print("  illegal formula {}: {}".
-                  format(formula, sys.exc_info()[1]))
+            print(f"  illegal formula {formula}: {sys.exc_info()[1]}")
             tests_passed += 1
 
     print()
     if tests_run == tests_passed:
-        print("Passed all {} Dice tests".format(tests_passed))
+        print(f"Passed all {tests_passed} Dice tests")
     else:
-        print("FAILED {}/{} Dice tests".format(tests_run-tests_passed,
-                                               tests_run))
+        missed = tests_run - tests_passed
+        print(f"FAILED {missed}/{tests_run} Dice tests")
 
 
 if __name__ == "__main__":

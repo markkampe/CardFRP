@@ -24,7 +24,7 @@ class GameObject(Base):
         @param name: display name of this object
         @param descr: for players description of this object
         """
-        super(GameObject, self).__init__(name, descr)
+        super().__init__(name, descr)
         self.objects = []
 
     def __str__(self):
@@ -129,8 +129,8 @@ class GameObject(Base):
         # if sum of RESISTANCE >= TO_HIT, action has been resisted
         power = int(action.get("TO_HIT")) - resistance
         if power <= 0:
-            return (False, "{} resists {} {}"
-                    .format(self.name, action.source.name, action.verb))
+            return (False,
+                    f"{self.name} resists {action.source.name} {action.verb}")
 
         # for each STACK instance, roll to see if roll+RESISTANCE > TO_HIT
         incoming = abs(int(action.get("TOTAL")))
@@ -155,11 +155,11 @@ class GameObject(Base):
             self.set(action.verb, have + (sign * received))
 
         # return <whether or not any succeed, accumulated results>
+        delivered = incoming - received
+        neg = "(negative) " if sign < 0 else ""
         return (received > 0,
-                "{} resists {}/{} stacks of {} from {} in {}"
-                .format(self.name, incoming - received, incoming,
-                        ("(negative) " if sign < 0 else "") + action.verb,
-                        actor, context))
+                f"{self.name} resists {delivered}/{incoming}"
+                f" stacks of {neg}{action.verb} from {actor} in {context}")
 
     # pylint: disable=unused-argument; sub-classes are likely to use them
     # pylint: disable=too-many-branches; there are a lot of cases
@@ -293,7 +293,7 @@ class GameObject(Base):
         cur_object = self
 
         try:
-            infile = open(filename, "r")
+            infile = open(filename, "r", encoding='ascii')
             for line in infile:
                 # for each non-comment line, read name and value
                 (name, value) = _lex(line)
@@ -314,8 +314,7 @@ class GameObject(Base):
 
             infile.close()
         except IOError:
-            sys.stderr.write("Unable to read attributes from {}\n".
-                             format(filename))
+            sys.stderr.write(f"Unable to read attributes from {filename}\n")
 
 
 def _lex(line):
@@ -391,10 +390,10 @@ def action_test():
     # added actions are returned
     test_actions = "ACTION,SECOND ACTION"
     go1.set("ACTIONS", test_actions)
-    print("Set actions='{}', possible_actions returns:".format(test_actions))
+    print(f"Set actions='{test_actions}', possible_actions returns:")
     actions = go1.possible_actions(None, None)
     for action in actions:
-        print("    {}".format(action.verb))
+        print(f"    {action.verb}")
     assert (len(actions) == 2), \
         "possible_actions returns wrong number of actions"
     assert (actions[0].verb == "ACTION"), \
@@ -452,7 +451,6 @@ def weapon_test():
           " ... BASE ATTACK, ACCURACY and DAMAGE - CORRECT")
 
     # multi-attack weapons have (addative) damage and accuracy for each attack
-    # pylint: disable=bad-whitespace
     w_2 = GameObject("multi-attack weapon")
 
     attacks = [
@@ -487,18 +485,18 @@ def weapon_test():
         action = actions[index]
         tried += 3
         assert action.verb == verb, \
-            "action {}, verb={}, expected {}".format(index, action.verb, verb)
+            f"action {index}, verb={action.verb}, expected {verb}"
         assert action.get("ACCURACY") == exp_acc, \
-            "action {}, expected ACCURACY={}, got {}". \
-            format(action.verb, exp_acc, action.get("ACCURACY"))
+            f"action {action.verb}, expected ACCURACY={exp_acc}" \
+            f", got {action.get('ACCURACY')}"
         assert action.get("DAMAGE") == exp_dmg, \
-            "action {}, expected DAMAGE={}, got {}". \
-            format(action.verb, exp_dmg, action.get("DAMAGE"))
+            f"action {action.verb}, expected DAMAGE={action.dmg}" \
+            f", got {action.get('DAMAGE')}"
         passed += 3
-        print("test #3: {} {} ... ACCURACY({}) and DAMAGE({}) - CORRECT".
-              format(w_2.name, action.verb,
-                     "base plus sub-type" if "." in verb else "base only",
-                     "sub-type only" if "." in verb else "base only"))
+        acc = "base plus sub-type" if "." in verb else "base only"
+        dmg = "sub-type only" if "." in verb else "base only"
+        print(f"test #3: {w_2.name} {action.verb}"
+              f"... ACCURACY({acc}) and DAMAGE({dmg}) - CORRECT")
     return (tried, passed)
 
 
@@ -544,8 +542,8 @@ def compound_test():
             assert damages[0] == "666", "DAMAGE.one not used"
             assert damages[1] == "60", "base DAMAGE not used"
             passed += 2
-            print("test #4a: {} {} ...\n\t  ACCURACY(S), DAMAGE(S) - CORRECT".
-                  format(obj.name, action.verb))
+            print(f"test #4a: {obj.name} {action.verb}"
+                  "...\n\t  ACCURACY(S), DAMAGE(S) - CORRECT")
 
             # condition power = [base+sub, base=only]
             powers = action.get("POWER").split(',')
@@ -558,8 +556,8 @@ def compound_test():
             assert stacks[0] == "6", "STACKS.two not used"
             assert stacks[1] == "3", "base STACKS not used"
             passed += 2
-            print("test #4b: {} {} ...\n\t  POWER(S), STACKS(S) - CORRECT".
-                  format(obj.name, action.verb))
+            print(f"test #4b: {obj.name} {action.verb} ...\n"
+                  "\t  POWER(S), STACKS(S) - CORRECT")
         elif action.verb == second:
             tried += 4
             accuracies = action.get("ACCURACY").split(',')
@@ -573,8 +571,8 @@ def compound_test():
             stacks = action.get("STACKS").split(',')
             assert stacks[0] == "66", "STACKS.six not used"
             passed += 2
-            print("test #4c: {} {} ... \n\tPOWER, STACKS - CORRECT".
-                  format(obj.name, action.verb))
+            print(f"test #4c: {obj.name} {action.verb} ... \n"
+                  "\tPOWER, STACKS - CORRECT")
         else:
             tried += 1
             assert False, "Incorrect verb: " + action.verb
@@ -591,39 +589,39 @@ def compound_test():
 
     actions = obj.possible_actions(None, None)
     assert len(actions) == 1, \
-        "Incorrect actions: expected 1, got {}".format(len(actions))
+        f"Incorrect actions: expected 1, got {actions}"
     action = actions[0]
     assert action.verb == first, \
-        "Incorrect action: expected {}, got {}".format(first, action.verb)
+        f"Incorrect action: expected {first}, got {action.verb}"
 
     # attack accuracy = [sub, None]
     accuracies = action.get("ACCURACY").split(',')
     assert accuracies[0] == "7", "ACCURACY.seven not used"
     assert accuracies[1] == "0", \
-        "expected ACCURACY=0, got {}".format(accuracies[1])
+        f"expected ACCURACY=0, got {accuracies[1]}"
 
     # attack damage = [sub, None]
     damages = action.get("DAMAGE").split(',')
     assert damages[0] == "777", "DAMAGE.seven not used"
     assert damages[1] == "0", \
-        "expected DAMAGE=0, got {}".format(damages[1])
+        f"expected DAMAGE=0, got {damages[1]}"
 
-    print("test #4d: {} {} ... \n\tACCURACY, DAMAGE - CORRECT".
-          format(obj.name, action.verb))
+    print(f"test #4d: {obj.name} {action.verb} ... \n"
+          "\tACCURACY, DAMAGE - CORRECT")
 
     # condition power = [base+sub, base=only]
     powers = action.get("POWER").split(',')
     assert powers[0] == "8", "POWER.eight not used"
     assert powers[1] == "0", \
-        "expected POWER=0, got {}".format(powers[1])
+        f"expected POWER=0, got {powers[1]}"
 
     # condition stacks = [sub, base=only]
     stacks = action.get("STACKS").split(',')
     assert stacks[0] == "88", "STACKS.eight not used"
     assert stacks[1] == "1", "default STACKS=1 not used"
 
-    print("test #4e: {} {} ... \n\tPOWER, STACKS - CORRECT".
-          format(obj.name, action.verb))
+    print(f"test #4e: {obj.name} {action.verb} ... \n"
+          "\tPOWER, STACKS - CORRECT")
 
     return (tried, passed)
 
@@ -652,8 +650,8 @@ def accept_test():
 
     # decode and check the returned status string
     resisted = int(desc.split()[2].split('/')[0])
-    expect = "{} resists {}/100 stacks of {} from {} in {}".\
-        format(target.name, resisted, action.verb, initiator.name, arena.name)
+    expect = f"{target.name} resists {resisted}/100 stacks of {action.verb}" \
+             f" from {initiator.name} in {arena.name}"
     assert desc == expect, \
         "Successful 50/50 did not return expected result string"
     passed += 1
@@ -665,13 +663,12 @@ def accept_test():
         "too many 50/50 STACKS got through"
     attribute = target.get(action.verb)
     assert attribute == (100 - resisted), \
-        "target's {} does not reflect correct 100-{}". \
-        format(action.verb, resisted)
+        f"target's {action.verb} does not reflect correct 100-{resisted}"
     passed += 3
 
-    print("test #5a: {} resists {}/100 STACKS of {} ... \n\t{}.{} 100 -> {}".
-          format(target.name, resisted, action.verb, target.name,
-                 action.verb, attribute))
+    print(f"test #5a: {target.name} resists {resisted}/100 STACKS"
+          f" of {action.verb} ... \n"
+          f"\t{target.name}.{action.verb} 100 -> {attribute}")
 
     # confirm that negative stacks also get through
     action = GameAction(initiator, "SURE-THING")
@@ -681,24 +678,23 @@ def accept_test():
     (success, desc) = action.act(initiator, target, arena)
     tried += 4
     assert success, \
-        "{} action failed".format(action.verb)
+        f"{action.verb} action failed"
 
     resisted = int(desc.split()[2].split('/')[0])
-    expect = "{} resists {}/50 stacks of (negative) {} from {} in {}".\
-        format(target.name, resisted, action.verb, initiator.name, arena.name)
+    expect = f"{target.name} resists {resisted}/50 stacks of" \
+             f" (negative) {action.verb} from {initiator.name} in {arena.name}"
     assert desc == expect, \
         "Successful SURE-THING did not return expected result string"
     assert resisted == 0, \
-        "{} resists {} STACKS of {}".format(target.name, resisted, action.verb)
+        f"{target.name} resists {resisted} STACKS of {action.verb}"
 
     attribute = target.get(action.verb)
     assert attribute == (100 - 50), \
-        "100 - 50 STACKS of {} -> {}".format(action.verb, attribute)
+        f"100 - 50 STACKS of {action.verb} -> {attribute}"
     passed += 4
 
-    print("test #5b: {} delivers -50 STACKS of {} ... \n\t{}.{} 100 -> {}".
-          format(initiator.name, action.verb, target.name, action.verb,
-                 attribute))
+    print(f"test #5b: {initiator.name} delivers -50 STACKS of {action.verb}"
+          f" ... \n\t{target.name}.{action.verb} 100 -> {attribute}")
 
     # adequate RESISTANCE is total protection
     target.set("RESISTANCE", 100)
@@ -707,16 +703,15 @@ def accept_test():
     (success, desc) = action.act(initiator, target, arena)
     tried += 3
     assert not success, \
-        "{} action succeeded".format(action.verb)
-    assert desc == "{} resists {} {}". \
-        format(target.name, initiator.name, action.verb), \
-        "{} action does not return correct failure message".format(action.verb)
+        f"{action.verb} action succeeded"
+    assert desc == f"{target.name} resists {initiator.name} {action.verb}", \
+        f"{action.verb} action does not return correct failure message"
     assert target.get(action.verb) is None, \
-        "target property was set by failed {} action".format(action.verb)
+        f"target property was set by failed {action.verb} action"
     passed += 3
 
-    print("test #5c: {} delivers 100 STACKS of {} ... \n\t{}".
-          format(initiator.name, action.verb, desc))
+    print(f"test #5c: {initiator.name} delivers 100 STACKS"
+          f" of {action.verb} ... \n\t{desc}")
 
     # adequate RESISTANCE.verb is total protection
     target.set("RESISTANCE", None)
@@ -726,16 +721,15 @@ def accept_test():
     (success, desc) = action.act(initiator, target, arena)
     tried += 3
     assert not success, \
-        "{} action succeeded".format(action.verb)
-    assert desc == "{} resists {} {}". \
-        format(target.name, initiator.name, action.verb), \
-        "{} action does not return correct failure message".format(action.verb)
+        f"{action.verb} action succeeded"
+    assert desc == f"{target.name} resists {initiator.name} {action.verb}", \
+        f" {action.verb} action does not return correct failure message"
     assert target.get(action.verb) is None, \
-        "target property was set by failed {} action".format(action.verb)
+        f"target property was set by failed {action.verb} action"
     passed += 3
 
-    print("test #5d: {} delivers 100 STACKS of {} ... \n\t{}".
-          format(initiator.name, action.verb, desc))
+    print(f"test #5d: {initiator.name} delivers 100 STACKS"
+          f"of {action.verb} ... \n\t{desc}")
 
     # adequate RESISTANCE.verb.subtype is total protection
     target.set("RESISTANCE.VERB-RESISTED-ACTION", None)
@@ -745,16 +739,15 @@ def accept_test():
     (success, desc) = action.act(initiator, target, arena)
     tried += 3
     assert not success, \
-        "{} action succeeded".format(action.verb)
-    assert desc == "{} resists {} {}". \
-        format(target.name, initiator.name, action.verb), \
-        "{} action does not return correct failure message".format(action.verb)
+        f"{action.verb} action succeeded"
+    assert desc == f"{target.name} resists {initiator.name} {action.verb}", \
+        f"{action.verb} action does not return correct failure message"
     assert target.get(action.verb) is None, \
-        "target property was set by failed {} action".format(action.verb)
+        f"target property was set by failed {action.verb} action"
     passed += 3
 
-    print("test #5e: {} delivers 100 STACKS of {} ... \n\t{}".
-          format(initiator.name, action.verb, desc))
+    print(f"test #5e: {initiator.name} delivers 100 STACKS"
+          f" of {action.verb} ... \n\t{desc}")
 
     target.set("RESISTANCE.RESISTED-ACTION.SUBTYPE", None)
 
@@ -767,17 +760,16 @@ def accept_test():
     (success, desc) = action.act(initiator, target, arena)
     tried += 3
     assert success, \
-        "sure thing {} did not succeed".format(action.verb)
+        f"sure thing {action.verb} did not succeed"
     life = target.get(action.verb)
     assert life <= target.get("HP"), \
-        "{} raised above HP {}".format(action.verb, target.get("HP"))
+        f"{action.verb} raised above HP {target.get('HP')}"
     assert life == target.get("HP"), \
-        "25/50 + 100 STACKS of {} -> {}".format(action.verb, life)
+        "25/50 + 100 STACKS of {action.verb} -> {life}"
     passed += 3
 
-    print("test #5f: 25/50 + 100 STACKS of {} ... \n\t{}.{} 25 -> {}".
-          format(action.verb, target.name, action.verb, life))
-
+    print(f"test #5f: 25/50 + 100 STACKS of {action.verb}"
+          f" ... \n\t{target.name}.{action.verb} 25 -> {life}")
     print()
     return (tried, passed)
 
@@ -793,9 +785,10 @@ def main():
     tried = t_1 + t_2 + t_3 + t_4
     passed = p_1 + p_2 + p_3 + p_4
     if tried == passed:
-        print("Passed all {} GameObject tests".format(passed))
+        print(f"Passed all {passed} GameObject tests")
     else:
-        print("FAILED {}/{} GameObject tests".format(tried-passed, tried))
+        missed = tried - passed
+        print(f"FAILED {missed}/{tried} GameObject tests")
 
 
 if __name__ == "__main__":
