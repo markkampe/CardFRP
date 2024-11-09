@@ -293,26 +293,24 @@ class GameObject(Base):
         cur_object = self
 
         try:
-            infile = open(filename, "r", encoding='ascii')
-            for line in infile:
-                # for each non-comment line, read name and value
-                (name, value) = _lex(line)
-                if name is None:
-                    continue
+            with open(filename, "r", encoding='ascii') as infile:
+                for line in infile:
+                    # for each non-comment line, read name and value
+                    (name, value) = _lex(line)
+                    if name is None:
+                        continue
 
-                # check for special names: NAME, DESCRIPTION, OBJECT
-                if name == "NAME":
-                    cur_object.name = value
-                elif name == "DESCRIPTION":
-                    cur_object.description = value
-                elif name == "OBJECT":
-                    cur_object = GameObject()
-                    self.add_object(cur_object)
-                else:
-                    # anything else is just an attribute of latest object
-                    cur_object.set(name, value)
-
-            infile.close()
+                    # check for special names: NAME, DESCRIPTION, OBJECT
+                    if name == "NAME":
+                        cur_object.name = value
+                    elif name == "DESCRIPTION":
+                        cur_object.description = value
+                    elif name == "OBJECT":
+                        cur_object = GameObject()
+                        self.add_object(cur_object)
+                    else:
+                        # anything else is just an attribute of latest object
+                        cur_object.set(name, value)
         except IOError:
             sys.stderr.write(f"Unable to read attributes from {filename}\n")
 
