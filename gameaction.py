@@ -125,15 +125,16 @@ class GameAction(Base):
             self.verb = verb
             if "ATTACK" in verb:
                 self.set("TO_HIT", 100 +
-                         self.__accuracy(verb, accuracies[attacks], initiator))
+                         compute_accuracy(verb, accuracies[attacks],
+                                          initiator))
                 self.set("HIT_POINTS",
-                         self.__damage(verb, damages[attacks], initiator))
+                         compute_damage(verb, damages[attacks], initiator))
                 attacks += 1
             else:
                 self.set("TO_HIT", 100 +
-                         self.__power(verb, powers[conditions], initiator))
+                         compute_power(verb, powers[conditions], initiator))
                 self.set("TOTAL",
-                         self.__stacks(verb, stacks[conditions], initiator))
+                         compute_stacks(verb, stacks[conditions], initiator))
                 conditions += 1
             # pass them on to target, and accumulate results
             (success, result) = target.accept_action(self, initiator, context)
@@ -167,151 +168,155 @@ class GameAction(Base):
             return [atr] * size
         return atr.split(',')
 
-    def __accuracy(self, verb, base, initiator):
-        """
-        helper to compute accuracy of this attack, based on the supplied
-        base ACCURACY plus any initiator ACCURACY(.subtype) bonus(es).
 
-        @param verb: (string) attack verb
-        @param base: (int) accuracy (from the action)
-        @param initiator: (GameActor) who is initiating the attack
-        @return: (int) probability of hitting
-        """
-        # get base accuracy from the action
-        if base is None:
-            w_accuracy = 0
-        else:
-            w_accuracy = int(base)
+def compute_accuracy(verb, base, initiator):
+    """
+    helper to compute accuracy of this attack, based on the supplied
+    base ACCURACY plus any initiator ACCURACY(.subtype) bonus(es).
 
-        # get the initiator base accuracy
-        acc = initiator.get("ACCURACY")
-        if acc is None:
-            i_accuracy = 0
-        else:
-            i_accuracy = int(acc)
+    @param verb: (string) attack verb
+    @param base: (int) accuracy (from the action)
+    @param initiator: (GameActor) who is initiating the attack
+    @return: (int) probability of hitting
+    """
+    # get base accuracy from the action
+    if base is None:
+        w_accuracy = 0
+    else:
+        w_accuracy = int(base)
 
-        # add any initiator sub-type accuracy
-        if 'ATTACK.' in verb:
-            sub_type = verb.split('.')[1]
-            if sub_type is not None:
-                acc = initiator.get("ACCURACY." + sub_type)
-                if acc is not None:
-                    i_accuracy += int(acc)
+    # get the initiator base accuracy
+    acc = initiator.get("ACCURACY")
+    if acc is None:
+        i_accuracy = 0
+    else:
+        i_accuracy = int(acc)
 
-        return w_accuracy + i_accuracy
+    # add any initiator sub-type accuracy
+    if 'ATTACK.' in verb:
+        sub_type = verb.split('.')[1]
+        if sub_type is not None:
+            acc = initiator.get("ACCURACY." + sub_type)
+            if acc is not None:
+                i_accuracy += int(acc)
 
-    def __damage(self, verb, base, initiator):
-        """
-        helper to compute the damage of this attack, based on the supplied
-        base DAMAGE plus any initiator DAMAGE(.subtype) bonus(es).
+    return w_accuracy + i_accuracy
 
-        @param verb: (string) attack verb
-        @param base: (string) dice formula for base damage
-        @param initiator: (GameActor) who is initiating the attack
-        @return: (int) total damage
-        """
-        # get the basic action damage formula and roll it
-        if base is None:
-            w_damage = 0
-        else:
-            dice = Dice(base)
-            w_damage = dice.roll()
 
-        # get initiator base damage formula and roll it
-        dmg = initiator.get("DAMAGE")
-        if dmg is None:
-            i_damage = 0
-        else:
-            dice = Dice(dmg)
-            i_damage = dice.roll()
+def compute_damage(verb, base, initiator):
+    """
+    helper to compute the damage of this attack, based on the supplied
+    base DAMAGE plus any initiator DAMAGE(.subtype) bonus(es).
 
-        # add any initiator sub-type damage
-        if 'ATTACK.' in verb:
-            sub_type = verb.split('.')[1]
-            if sub_type is not None:
-                dmg = initiator.get("DAMAGE." + sub_type)
-                if dmg is not None:
-                    dice = Dice(dmg)
-                    i_damage += dice.roll()
+    @param verb: (string) attack verb
+    @param base: (string) dice formula for base damage
+    @param initiator: (GameActor) who is initiating the attack
+    @return: (int) total damage
+    """
+    # get the basic action damage formula and roll it
+    if base is None:
+        w_damage = 0
+    else:
+        dice = Dice(base)
+        w_damage = dice.roll()
 
-        return w_damage + i_damage
+    # get initiator base damage formula and roll it
+    dmg = initiator.get("DAMAGE")
+    if dmg is None:
+        i_damage = 0
+    else:
+        dice = Dice(dmg)
+        i_damage = dice.roll()
 
-    def __power(self, verb, base, initiator):
-        """
-        helper to compute the power of this action, based on the supplied
-        base POWER plus any initiator POWER.verb/POWER.verb.subtype bonuses
+    # add any initiator sub-type damage
+    if 'ATTACK.' in verb:
+        sub_type = verb.split('.')[1]
+        if sub_type is not None:
+            dmg = initiator.get("DAMAGE." + sub_type)
+            if dmg is not None:
+                dice = Dice(dmg)
+                i_damage += dice.roll()
 
-        @param verb: (string) action verb
-        @param base: (int) base power (from action)
-        @param initiator: (GameActor) who is sending the condition
-        @return: (int) total probability of hitting
-        """
-        # figure out the condition type and subtype
-        if '.' in verb:
-            base_type = verb.split('.')[0]
-            sub_type = verb.split('.')[1]
-        else:
-            base_type = verb
-            sub_type = None
+    return w_damage + i_damage
 
-        # get base power from the action
-        if base is None:
-            power = 0
-        else:
-            power = int(base)
 
-        # add the initiator base power
-        pwr = initiator.get("POWER." + base_type)
+def compute_power(verb, base, initiator):
+    """
+    helper to compute the power of this action, based on the supplied
+    base POWER plus any initiator POWER.verb/POWER.verb.subtype bonuses
+
+    @param verb: (string) action verb
+    @param base: (int) base power (from action)
+    @param initiator: (GameActor) who is sending the condition
+    @return: (int) total probability of hitting
+    """
+    # figure out the condition type and subtype
+    if '.' in verb:
+        base_type = verb.split('.')[0]
+        sub_type = verb.split('.')[1]
+    else:
+        base_type = verb
+        sub_type = None
+
+    # get base power from the action
+    if base is None:
+        power = 0
+    else:
+        power = int(base)
+
+    # add the initiator base power
+    pwr = initiator.get("POWER." + base_type)
+    if pwr is not None:
+        power += int(pwr)
+
+    # add any initiator sub-type power
+    if sub_type is not None:
+        pwr = initiator.get("POWER." + base_type + '.' + sub_type)
         if pwr is not None:
             power += int(pwr)
 
-        # add any initiator sub-type power
-        if sub_type is not None:
-            pwr = initiator.get("POWER." + base_type + '.' + sub_type)
-            if pwr is not None:
-                power += int(pwr)
+    return power
 
-        return power
 
-    def __stacks(self, verb, base, initiator):
-        """
-        helper to compute the stacks of this action, based on the supplied
-        base STACKS plus any initiator STACKS.verb/STACKS.verb.subtype bonuses
+def compute_stacks(verb, base, initiator):
+    """
+    helper to compute the stacks of this action, based on the supplied
+    base STACKS plus any initiator STACKS.verb/STACKS.verb.subtype bonuses
 
-        @param verb: (string) action verb
-        @param base: (string) dice formula for base stacks
-        @param initiator: (GameActor) who is sending the condition
-        @return: (int) total number of stacks
-        """
-        # figure out the condition type and subtype
-        if '.' in verb:
-            base_type = verb.split('.')[0]
-            sub_type = verb.split('.')[1]
-        else:
-            base_type = verb
-            sub_type = None
+    @param verb: (string) action verb
+    @param base: (string) dice formula for base stacks
+    @param initiator: (GameActor) who is sending the condition
+    @return: (int) total number of stacks
+    """
+    # figure out the condition type and subtype
+    if '.' in verb:
+        base_type = verb.split('.')[0]
+        sub_type = verb.split('.')[1]
+    else:
+        base_type = verb
+        sub_type = None
 
-        # get base stacks from the action
-        if base is None:
-            stacks = 1
-        else:
-            dice = Dice(base)
-            stacks = dice.roll()
+    # get base stacks from the action
+    if base is None:
+        stacks = 1
+    else:
+        dice = Dice(base)
+        stacks = dice.roll()
 
-        # add the initiator base stacks
-        stx = initiator.get("STACKS." + base_type)
+    # add the initiator base stacks
+    stx = initiator.get("STACKS." + base_type)
+    if stx is not None:
+        dice = Dice(stx)
+        stacks += dice.roll()
+
+    # add any initiator sub-type stacks
+    if sub_type is not None:
+        stx = initiator.get("STACKS." + base_type + '.' + sub_type)
         if stx is not None:
             dice = Dice(stx)
             stacks += dice.roll()
 
-        # add any initiator sub-type stacks
-        if sub_type is not None:
-            stx = initiator.get("STACKS." + base_type + '.' + sub_type)
-            if stx is not None:
-                dice = Dice(stx)
-                stacks += dice.roll()
-
-        return stacks
+    return stacks
 
 
 # UNIT TESTING
