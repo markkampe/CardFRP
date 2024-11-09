@@ -82,8 +82,8 @@ class Dice():
 
                 self.dice_type = 100 if values[1] == '%' else int(values[1])
                 self.plus = int(values[2])
-            except ValueError:
-                raise ValueError("non-numeric value in dice expression")
+            except ValueError as exc:
+                raise ValueError("non-numeric value in dice expression") from exc
         else:
             try:
                 self.min_value = int(values[0])
@@ -92,8 +92,8 @@ class Dice():
                     self.min_value = None
                     self.max_value = None
                     raise ValueError("illegal range in dice expression")
-            except ValueError:
-                raise ValueError("non-numeric value in dice expression")
+            except ValueError as exc:
+                raise ValueError("non-numeric value in dice expression") from exc
 
     def str(self):
         """
